@@ -3,7 +3,7 @@
 use serde::{Serialize, Serializer};
 
 /// A literal value.
-#[derive(Debug, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize)]
 #[serde(untagged)]
 pub enum LiteralValue {
     String(String),
@@ -13,18 +13,30 @@ pub enum LiteralValue {
     RegExp(String),
 }
 
-/// A function declaration or expression.
-#[derive(Debug, Serialize)]
-pub struct Function {
-    /// `type: Identifier | null`
-    pub id: Option<Box<Node>>,
-    /// `type: [ Pattern ]`
-    pub params: Vec<Node>,
-    /// `type: FunctionBody`
-    pub body: Box<Node>,
+impl LiteralValue {
+    pub fn into_node_kind<'a>(self) -> NodeKind<'a> {
+        self.into()
+    }
 }
 
-#[derive(Debug)]
+impl<'a> From<LiteralValue> for NodeKind<'a> {
+    fn from(value: LiteralValue) -> Self {
+        NodeKind::Literal { value }
+    }
+}
+
+/// A function declaration or expression.
+#[derive(Debug, PartialEq, Clone, Serialize)]
+pub struct Function<'a> {
+    /// `type: Identifier | null`
+    pub id: Option<Box<Node<'a>>>,
+    /// `type: [ Pattern ]`
+    pub params: Vec<Node<'a>>,
+    /// `type: FunctionBody`
+    pub body: Box<Node<'a>>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum VariableDeclarationKind {
     Var,
 }
@@ -42,7 +54,7 @@ impl Serialize for VariableDeclarationKind {
 }
 
 /// Ordinary property initializers have a kind value `"init"`; getters and setters have the kind values `"get"` and `"set"`, respectively.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum PropertyKind {
     Init,
     Get,
@@ -64,7 +76,7 @@ impl Serialize for PropertyKind {
 }
 
 /// An unary operator token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum UnaryOperator {
     Minus,
     Plus,
@@ -94,7 +106,7 @@ impl Serialize for UnaryOperator {
 }
 
 /// An update (increment or decrement) operator token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum UpdateOperator {
     Increment,
     Decrement,
@@ -114,7 +126,7 @@ impl Serialize for UpdateOperator {
 }
 
 /// A binary operator token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum BinaryOperator {
     EqualsEquals,
     NotEquals,
@@ -175,7 +187,7 @@ impl Serialize for BinaryOperator {
 }
 
 /// An assignment operator token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum AssignmentOperator {
     Equals,
     PlusEquals,
@@ -221,7 +233,7 @@ impl Serialize for AssignmentOperator {
 }
 
 /// A logical operator token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum LogicalOperator {
     LogicalOr,
     LogicalAnd,
@@ -242,21 +254,21 @@ impl Serialize for LogicalOperator {
 
 /// A mega enum with ever single possible AST node.
 /// Refer to https://github.com/estree/estree/blob/master/es5.md for spec on AST nodes.
-#[derive(Debug, Serialize)]
+#[derive(Debug, PartialEq, Clone, Serialize)]
 #[serde(tag = "type")]
-pub enum NodeKind {
+pub enum NodeKind<'a> {
     /// An identifier. Note that an identifier may be an expression or a destructuring pattern.
     Identifier {
         name: String,
     },
     /// A literal token. Note that a literal can be an expression.
     Literal {
-        value: LiteralValue
+        value: LiteralValue,
     },
     /// A complete program source tree.
     Program {
         /// `type: [ Directive | Statement ]`
-        body: Vec<Node>,
+        body: Vec<Node<'a>>,
     },
     /*
     Statements
@@ -264,25 +276,25 @@ pub enum NodeKind {
     /// An expression statement, i.e., a statement consisting of a single expression.
     ExpressionStatement {
         /// `type: Expression`
-        expression: Box<Node>,
+        expression: Box<Node<'a>>,
     },
     /// A directive from the directive prologue of a script or function.
     /// The `directive` property is the raw string source of the directive without quotes.
     Directive {
         /// `type: Literal`
-        expression: Box<Node>,
+        expression: Box<Node<'a>>,
         /// The raw string source of the directive without quotes.
         directive: String,
     },
     /// A block statement, i.e., a sequence of statements surrounded by braces.
     BlockStatement {
         /// `type: [ Statement ]`
-        body: Vec<Node>,
+        body: Vec<Node<'a>>,
     },
     /// The body of a function, which is a block statement that may begin with directives.
     FunctionBody {
         /// `type: [ Directive | Statement ]`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /// An empty statement, i.e., a solitary semicolon.
     EmptyStatement,
@@ -296,24 +308,24 @@ pub enum NodeKind {
     /// A `return` statement.
     ReturnStatement {
         /// `type: Expression | null`
-        argument: Option<Box<Node>>,
+        argument: Option<Box<Node<'a>>>,
     },
     /// A labeled statement, i.e., a statement prefixed by a `break`/`continue` label.
     LabeledStatement {
         /// `type: Identifier`
-        label: Box<Node>,
+        label: Box<Node<'a>>,
         /// `type: Statement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /// A `break` statement.
     BreakStatement {
         /// `type: Identifier | null`
-        label: Option<Box<Node>>,
+        label: Option<Box<Node<'a>>>,
     },
     /// A `continue` statement.
     ContinueStatement {
         /// `type: Identifier | null`
-        label: Option<Box<Node>>,
+        label: Option<Box<Node<'a>>>,
     },
     /*
     Statements / Choice
@@ -321,25 +333,25 @@ pub enum NodeKind {
     /// An `if` statement.
     IfStatement {
         /// `type: Expression`
-        test: Box<Node>,
+        test: Box<Node<'a>>,
         /// `type: Statement`
-        consequent: Box<Node>,
+        consequent: Box<Node<'a>>,
         /// `type: Statement | null`
-        alternate: Option<Box<Node>>,
+        alternate: Option<Box<Node<'a>>>,
     },
     /// A `switch` statement.
     SwitchStatement {
         /// `type: Expression`
-        discriminant: Box<Node>,
+        discriminant: Box<Node<'a>>,
         /// `type: [ SwitchCase ]`
-        cases: Vec<Node>,
+        cases: Vec<Node<'a>>,
     },
     /// A `case` (if `test` is an `Expression`) or `default` (if `test === null`) clause in the body of a `switch` statement.
     SwitchCase {
         /// `type: Expression | null`
-        test: Option<Box<Node>>,
+        test: Option<Box<Node<'a>>>,
         /// `type: [ Statement ]`
-        consequent: Vec<Node>,
+        consequent: Vec<Node<'a>>,
     },
     /*
     Statements / Exceptions
@@ -347,22 +359,22 @@ pub enum NodeKind {
     /// A `throw` statement.
     ThrowStatement {
         /// `type: Expression`
-        argument: Box<Node>,
+        argument: Box<Node<'a>>,
     },
     /// A `try` statement. If `handler` is `null` then `finalizer` must be a `BlockStatement`.
     TryStatement {
         /// `type: BlockStatement`
-        block: Box<Node>,
+        block: Box<Node<'a>>,
         /// `type: CatchClause | null`
-        handler: Option<Box<Node>>,
+        handler: Option<Box<Node<'a>>>,
         /// `type: BlockStatement | null`
-        finalizer: Option<Box<Node>>,
+        finalizer: Option<Box<Node<'a>>>,
     },
     CatchClause {
         /// `type: Pattern`
-        param: Box<Node>,
+        param: Box<Node<'a>>,
         /// `type: BlockStatement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /*
     Statements / Loops
@@ -370,36 +382,36 @@ pub enum NodeKind {
     /// A `while` statement.
     WhileStatement {
         /// `type: Expression`
-        test: Box<Node>,
+        test: Box<Node<'a>>,
         /// `type: Statement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /// A `do`/`while` statement.
     DoWhileStatement {
         /// `type: Statement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
         /// `type: Expression`
-        test: Box<Node>,
+        test: Box<Node<'a>>,
     },
     /// A `for` statement.
     ForStatement {
         /// `type: VariableDeclaration | Expression | null`
-        init: Option<Box<Node>>,
+        init: Option<Box<Node<'a>>>,
         /// `type: Expression | null`
-        test: Option<Box<Node>>,
+        test: Option<Box<Node<'a>>>,
         /// `type: Expression | null`
-        update: Option<Box<Node>>,
+        update: Option<Box<Node<'a>>>,
         /// `type: Statement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /// A `for`/`in` statement.
     ForInStatement {
         /// `type: VariableDeclaration |  Pattern`
-        left: Box<Node>,
+        left: Box<Node<'a>>,
         /// `type: Expression`
-        right: Box<Node>,
+        right: Box<Node<'a>>,
         /// `type: Statement`
-        body: Box<Node>,
+        body: Box<Node<'a>>,
     },
     /*
     Statements / Declarations
@@ -408,23 +420,23 @@ pub enum NodeKind {
     /// Note that unlike in the parent interface `Function`, the `id` cannot be `null`.
     FunctionDeclaration {
         /// `type: Identifier`
-        id: Box<Node>,
+        id: Box<Node<'a>>,
         /// `type: Function`
         #[serde(flatten)]
-        function: Function,
+        function: Function<'a>,
     },
     /// A variable declaration.
     VariableDeclaration {
         /// `type: [ VariableDeclarator ]`
-        declarations: Vec<Node>,
+        declarations: Vec<Node<'a>>,
         kind: VariableDeclarationKind,
     },
     /// A variable declarator.
     VariableDeclarator {
         /// `type: Pattern`
-        id: Box<Node>,
+        id: Box<Node<'a>>,
         /// `type: Expression | null`
-        init: Option<Box<Node>>,
+        init: Option<Box<Node<'a>>>,
     },
     /*
     Expressions
@@ -434,26 +446,26 @@ pub enum NodeKind {
     /// An array expression. An element might be `null` if it represents a hole in a sparse array. E.g. `[1,,2]`.
     ArrayExpression {
         /// `type: [ Expression | null ]`
-        elements: Vec<Option<Node>>,
+        elements: Vec<Option<Node<'a>>>,
     },
     /// An object expression.
     ObjectExpression {
         /// `type: [ Property ]`
-        properties: Vec<Node>,
+        properties: Vec<Node<'a>>,
     },
     /// A literal property in an object expression can have either a string or number as its `value`.
     Property {
         /// `type: Literal | Identifier`
-        key: Box<Node>,
+        key: Box<Node<'a>>,
         /// `type: Expression`
-        value: Box<Node>,
+        value: Box<Node<'a>>,
         kind: PropertyKind,
     },
     /// A `function` expression.
     FunctionExpression {
         /// `type: Function`
         #[serde(flatten)]
-        function: Function,
+        function: Function<'a>,
     },
     /*
     Expressions / Unary operations
@@ -463,13 +475,13 @@ pub enum NodeKind {
         operator: UnaryOperator,
         prefix: bool,
         /// `type: Expression`
-        argument: Box<Node>,
+        argument: Box<Node<'a>>,
     },
     /// An update (increment or decrement) operator expression.
     UpdateExpression {
         operator: UpdateOperator,
         /// `type: Expression`
-        argument: Box<Node>,
+        argument: Box<Node<'a>>,
         prefix: bool,
     },
     /*
@@ -479,33 +491,33 @@ pub enum NodeKind {
     BinaryExpression {
         operator: BinaryOperator,
         /// `type: Expression`
-        left: Box<Node>,
+        left: Box<Node<'a>>,
         /// `type: Expression`
-        right: Box<Node>,
+        right: Box<Node<'a>>,
     },
     /// An assignment operator expression.
     AssignmentExpression {
         operator: AssignmentOperator,
         /// `type: Pattern | Expression`
-        left: Box<Node>,
+        left: Box<Node<'a>>,
         /// `type: Expression`
-        right: Box<Node>,
+        right: Box<Node<'a>>,
     },
     /// A logical operator expression.
     LogicalExpression {
         operator: LogicalOperator,
         /// `type: Expression`
-        left: Box<Node>,
+        left: Box<Node<'a>>,
         /// `type: Expression`
-        right: Box<Node>,
+        right: Box<Node<'a>>,
     },
     /// A member expression. If `computed` is `true`, the node corresponds to a computed (`a[b]`) member expression and `property` is an `Expression`.
     /// If `computed` is `false`, the node corresponds to a static (`a.b`) member expression and `property` is an `Identifier`.
     MemberExpression {
         /// `type: Expression`
-        object: Box<Node>,
+        object: Box<Node<'a>>,
         /// `type: Expression`
-        property: Box<Node>,
+        property: Box<Node<'a>>,
         computed: bool,
     },
     /*
@@ -514,49 +526,76 @@ pub enum NodeKind {
     /// A conditional expression, i.e., a ternary `?`/`:` expression.
     ConditionalExpression {
         /// `type: Expression`
-        test: Box<Node>,
+        test: Box<Node<'a>>,
         /// `type: Expression`
-        alternate: Box<Node>,
+        alternate: Box<Node<'a>>,
         /// `type: Expression`
-        consequent: Box<Node>,
+        consequent: Box<Node<'a>>,
     },
     /// A function or method call expression.
     CallExpression {
         /// `type: Expression`
-        callee: Box<Node>,
+        callee: Box<Node<'a>>,
         /// `type: [ Expression ]`
-        arguments: Vec<Node>,
+        arguments: Vec<Node<'a>>,
     },
     /// A `new` expression.
     NewExpression {
         /// `type: Expression`
-        callee: Box<Node>,
+        callee: Box<Node<'a>>,
         /// `type: [ Expression ]`
-        arguments: Vec<Node>,
+        arguments: Vec<Node<'a>>,
     },
     /// A sequence expression, i.e., a comma-separated sequence of expressions.
     SequenceExpression {
         /// `type: [ Expression ]`
-        expressions: Vec<Node>,
+        expressions: Vec<Node<'a>>,
     },
     /*
     Patterns
     */
     Pattern,
+    /*
+    Misc.
+    */
+    /// An error node. Should be used when source is not syntaxically correct.
+    Error
+}
+impl<'a> NodeKind<'a> {
+    /// Creates a `Node` from `NodeKind` with specified `pos`.
+    pub fn with_pos(
+        self,
+        start: crate::parser::Span<'a>,
+        end: crate::parser::Span<'a>,
+    ) -> Node<'a> {
+        Node {
+            kind: self,
+            start,
+            end,
+        }
+    }
 }
 
-#[derive(Debug, Serialize)]
-pub struct Node {
+#[derive(Debug, PartialEq, Clone, Serialize)]
+pub struct Node<'a> {
     #[serde(flatten)]
-    pub kind: NodeKind,
-    /// 0-based start position of node in AST, inclusive.
-    pub start: u32,
-    /// 0-based end position of node in AST, exclusive.
-    pub end: u32,
+    pub kind: NodeKind<'a>,
+    #[serde(serialize_with = "serialize_span")]
+    pub start: crate::parser::Span<'a>,
+    #[serde(serialize_with = "serialize_span")]
+    pub end: crate::parser::Span<'a>,
 }
-impl Node {
+
+fn serialize_span<S>(pos: &crate::parser::Span, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_u64(pos.location_offset() as u64)
+}
+
+impl<'a> Node<'a> {
     /// Returns the length of the AST node in source code.
-    pub fn len(&self) -> u32 {
-        self.end - self.start
+    pub fn len(&self) -> usize {
+        self.end.location_offset() - self.start.location_offset()
     }
 }
