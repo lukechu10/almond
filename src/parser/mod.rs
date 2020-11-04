@@ -43,7 +43,9 @@ pub fn parse_line_terminator_sequence(s: Span) -> IResult<Span, ()> {
 #[must_use]
 fn parse_single_line_comment(s: Span) -> IResult<Span, Span> {
     let (s, _) = tag("//")(s)?;
-    take_while(|c| !is_line_terminator(c))(s)
+    let (s, comment) = take_while(|c| !is_line_terminator(c))(s)?;
+    let (s, _) = parse_line_terminator(s)?;
+    Ok((s, comment))
 }
 
 #[must_use]
@@ -72,5 +74,35 @@ mod tests {
         all_consuming(parse_comment)("/* abc */".into()).unwrap();
         all_consuming(parse_comment)("/* abc\n123 */".into()).unwrap();
         all_consuming(parse_comment)("/* abc\n123 */ foo".into()).unwrap_err();
+    }
+
+    #[test]
+    fn test_comment() {
+        assert_eq!(
+            *parse_comment("// abc\ndef".into()).unwrap().0.fragment(),
+            "def"
+        );
+        assert_eq!(
+            *parse_comment("// abc\rdef".into()).unwrap().0.fragment(),
+            "def"
+        );
+        assert_eq!(
+            *parse_comment("// abc\u{2028}def".into())
+                .unwrap()
+                .0
+                .fragment(),
+            "def"
+        );
+        assert_eq!(
+            *parse_comment("// abc\u{2029}def".into())
+                .unwrap()
+                .0
+                .fragment(),
+            "def"
+        );
+        assert_eq!(
+            *parse_comment("// abc\r\ndef".into()).unwrap().0.fragment(),
+            "\ndef"
+        );
     }
 }
