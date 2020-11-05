@@ -1,3 +1,5 @@
+//! Parsing for JS identifiers
+
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
@@ -15,34 +17,30 @@ fn unicode_esc_seq(s: Span) -> IResult<Span, char> {
     Ok((s, char))
 }
 
-pub fn identifier(s: Span) -> IResult<Span, Node> {
-    fn identifier_start(s: Span) -> IResult<Span, char> {
-        let (s, c) = verify(
-            alt((unicode_esc_seq, none_of(""))),
-            |c: &char| match c {
-                c if unicode_xid::UnicodeXID::is_xid_start(*c) => true,
-                '$' | '_' => true,
-                _ => false,
-            },
-        )(s)?;
-        Ok((s, c))
-    }
-    fn identifier_continue(s: Span) -> IResult<Span, char> {
-        let (s, c) = verify(
-            alt((unicode_esc_seq, none_of(""))),
-            |c: &char| match c {
-                c if unicode_xid::UnicodeXID::is_xid_continue(*c) => true,
-                '$' | '_' => true,
-                _ => false,
-            },
-        )(s)?;
-        Ok((s, c))
-    }
+pub fn identifier_start(s: Span) -> IResult<Span, char> {
+    verify(alt((unicode_esc_seq, anychar)), |c: &char| match c {
+        c if unicode_xid::UnicodeXID::is_xid_start(*c) => true,
+        '$' | '_' => true,
+        _ => false,
+    })(s)
+}
 
+pub fn identifier_continue(s: Span) -> IResult<Span, char> {
+    verify(alt((unicode_esc_seq, anychar)), |c: &char| match c {
+        c if unicode_xid::UnicodeXID::is_xid_continue(*c) => true,
+        '$' | '_' => true,
+        _ => false,
+    })(s)
+}
+
+pub fn identifier(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, name) = map(
-        pair(identifier_start, many0(identifier_continue)),
-        |(c, v)| format!("{}{}", c, v.into_iter().collect::<String>()),
+    let (s, name) = verify(
+        map(
+            pair(identifier_start, many0(identifier_continue)),
+            |(c, v)| format!("{}{}", c, v.into_iter().collect::<String>()),
+        ),
+        |ident: &str| not(reserved_word)(ident.into()).is_ok(),
     )(s)?;
     let (s, _) = spaces0(s)?;
     let (s, end) = position(s)?;
@@ -64,6 +62,10 @@ mod tests {
         all_consuming(identifier)("_elem".into()).unwrap();
         all_consuming(identifier)("$123".into()).unwrap();
         all_consuming(identifier)("_123".into()).unwrap();
+
+        // identifiers can start with keywords
+        all_consuming(identifier)("var_id".into()).unwrap();
+        all_consuming(identifier)("class_id".into()).unwrap();
     }
 
     #[test]
@@ -78,6 +80,14 @@ mod tests {
     }
 
     #[test]
+    fn test_keyword_not_identifier() {
+        all_consuming(identifier)("var".into()).unwrap_err();
+        all_consuming(identifier)("class".into()).unwrap_err();
+        all_consuming(identifier)("true".into()).unwrap_err();
+        all_consuming(identifier)("null".into()).unwrap_err();
+    }
+
+    #[test]
     fn test_identifier_with_unicode_escape() {
         assert_eq!(
             identifier(r#"abc\u0061"#.into()).unwrap().1.kind,
@@ -86,10 +96,7 @@ mod tests {
             }
         );
         assert_eq!(
-            identifier(r#"abc\u0061\u0062123"#.into())
-                .unwrap()
-                .1
-                .kind,
+            identifier(r#"abc\u0061\u0062123"#.into()).unwrap().1.kind,
             NodeKind::Identifier {
                 name: "abcab123".into()
             }

@@ -1,9 +1,11 @@
 mod expression;
 mod identifier;
+mod keyword;
 mod literal;
 mod util;
 pub use expression::*;
 pub use identifier::*;
+pub use keyword::*;
 pub use literal::*;
 pub use util::*;
 
@@ -31,26 +33,14 @@ mod tests {
 
     #[test]
     fn test_comment() {
+        assert_eq!(*comment("// abc\ndef".into()).unwrap().0.fragment(), "def");
+        assert_eq!(*comment("// abc\rdef".into()).unwrap().0.fragment(), "def");
         assert_eq!(
-            *comment("// abc\ndef".into()).unwrap().0.fragment(),
+            *comment("// abc\u{2028}def".into()).unwrap().0.fragment(),
             "def"
         );
         assert_eq!(
-            *comment("// abc\rdef".into()).unwrap().0.fragment(),
-            "def"
-        );
-        assert_eq!(
-            *comment("// abc\u{2028}def".into())
-                .unwrap()
-                .0
-                .fragment(),
-            "def"
-        );
-        assert_eq!(
-            *comment("// abc\u{2029}def".into())
-                .unwrap()
-                .0
-                .fragment(),
+            *comment("// abc\u{2029}def".into()).unwrap().0.fragment(),
             "def"
         );
         assert_eq!(
