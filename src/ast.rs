@@ -559,7 +559,7 @@ pub enum NodeKind<'a> {
     Misc.
     */
     /// An error node. Should be used when source is not syntaxically correct.
-    Error
+    Error,
 }
 impl<'a> NodeKind<'a> {
     /// Creates a `Node` from `NodeKind` with specified `pos`.
