@@ -3,9 +3,7 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{
-    branch::alt, bytes::complete::*, character::complete::*, character::*, combinator::*, IResult,
-};
+use nom::{branch::alt, bytes::complete::*, character::complete::*, combinator::*, IResult};
 use nom_locate::position;
 
 /// Parses any 4 hex digits unicode escape sequence

@@ -1,13 +1,7 @@
 //! Utilities
 
 use crate::parser::*;
-use nom::{
-    branch::*,
-    bytes::complete::*,
-    combinator::*,
-    error::{Error, ParseError},
-    IResult, Parser,
-};
+use nom::{branch::*, bytes::complete::*, combinator::*, IResult};
 
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 pub type ParseResult<'a, T> = IResult<Span<'a>, T>;
@@ -95,4 +89,35 @@ pub fn spaces1(s: Span) -> IResult<Span, ()> {
         return Ok((s, ()));
     }
     value((), many1(space))(s)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn smoke_test_comment() {
+        all_consuming(comment)("// abc".into()).unwrap();
+        all_consuming(comment)("/* abc */".into()).unwrap();
+        all_consuming(comment)("/* abc\n123 */".into()).unwrap();
+        all_consuming(comment)("/* abc\n123 */ foo".into()).unwrap_err();
+    }
+
+    #[test]
+    fn test_comment() {
+        assert_eq!(*comment("// abc\ndef".into()).unwrap().0.fragment(), "def");
+        assert_eq!(*comment("// abc\rdef".into()).unwrap().0.fragment(), "def");
+        assert_eq!(
+            *comment("// abc\u{2028}def".into()).unwrap().0.fragment(),
+            "def"
+        );
+        assert_eq!(
+            *comment("// abc\u{2029}def".into()).unwrap().0.fragment(),
+            "def"
+        );
+        assert_eq!(
+            *comment("// abc\r\ndef".into()).unwrap().0.fragment(),
+            "\ndef"
+        );
+    }
 }
