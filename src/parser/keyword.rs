@@ -5,17 +5,17 @@ use crate::parser::*;
 use nom::{branch::alt, bytes::complete::*, combinator::*};
 
 /// Succeeds if parsed a reserved word. Shoud be used with `not` to check if an identifier is not a reserved word.
-pub fn reserved_word(s: Span) -> ParseResult<()> {
+pub fn parse_reserved_word(s: Span) -> ParseResult<()> {
     alt((
-        keyword,
-        future_reserved_word,
-        value((), null_lit),
-        value((), bool_lit),
+        parse_keyword,
+        parse_future_reserved_word,
+        value((), ws0(null_lit)),
+        value((), ws0(bool_lit)),
     ))(s)
 }
 
 /// Succeeds if parsed is a keyword. Use `reserved_word` with `not` instead to check if an identifier is not a reserved word.
-pub fn keyword(s: Span) -> ParseResult<()> {
+pub fn parse_keyword(s: Span) -> ParseResult<()> {
     ws0(alt((
         keyword_break,
         keyword_do,
@@ -47,8 +47,8 @@ pub fn keyword(s: Span) -> ParseResult<()> {
     )))(s)
 }
 
-pub fn future_reserved_word_lax(s: Span) -> ParseResult<()> {
-    alt((
+pub fn parse_future_reserved_word_lax(s: Span) -> ParseResult<()> {
+    ws0(alt((
         keyword_class,
         keyword_enum,
         keyword_extends,
@@ -56,12 +56,12 @@ pub fn future_reserved_word_lax(s: Span) -> ParseResult<()> {
         keyword_const,
         keyword_export,
         keyword_import,
-    ))(s)
+    )))(s)
 }
 
-pub fn future_reserved_word_strict(s: Span) -> ParseResult<()> {
-    alt((
-        future_reserved_word_lax,
+pub fn parse_future_reserved_word_strict(s: Span) -> ParseResult<()> {
+    ws0(alt((
+        parse_future_reserved_word_lax,
         keyword_implements,
         keyword_let,
         keyword_private,
@@ -71,11 +71,11 @@ pub fn future_reserved_word_strict(s: Span) -> ParseResult<()> {
         keyword_protected,
         keyword_static,
         keyword_yield,
-    ))(s)
+    )))(s)
 }
 
-pub fn future_reserved_word(s: Span) -> ParseResult<()> {
-    future_reserved_word_strict(s)
+pub fn parse_future_reserved_word(s: Span) -> ParseResult<()> {
+    parse_future_reserved_word_strict(s)
 }
 
 pub fn keyword_break(s: Span) -> ParseResult<()> {
