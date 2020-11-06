@@ -15,7 +15,7 @@ pub fn expr(s: Span) -> IResult<Span, Node> {
 // `new`, or an expression wrapped in punctuation like `()`, `[]`,
 // or `{}`.
 pub fn primary_expr(s: Span) -> IResult<Span, Node> {
-    alt((this_expr, identifier, paren_expr, literal::literal))(s)
+    alt((this_expr, identifier, paren_expr, literal::parse_literal))(s)
 }
 
 pub fn this_expr(s: Span) -> IResult<Span, Node> {
@@ -29,16 +29,13 @@ pub fn this_expr(s: Span) -> IResult<Span, Node> {
 pub fn paren_expr(s: Span) -> IResult<Span, Node> {
     delimited(
         terminated(char('('), spaces0),
-        terminated(expr, spaces0),
+        expr,
         terminated(char(')'), spaces0),
     )(s)
 }
 
 pub fn expr_list(s: Span) -> IResult<Span, Vec<Option<Node>>> {
-    separated_list0(
-        terminated(char(','), spaces0),
-        opt(terminated(expr, spaces0)),
-    )(s)
+    separated_list0(terminated(char(','), spaces0), opt(expr))(s)
 }
 
 #[cfg(test)]

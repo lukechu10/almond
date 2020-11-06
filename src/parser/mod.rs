@@ -1,6 +1,6 @@
 //! Parsing for JS
 //! # Whitespace Handling
-//! All parse functions should handle leading whitespace. Preceding whitespace is only handled in top level parse function.
+//! All functions named `parse_*` should handle leading whitespace. Preceding whitespace is only handled in top level parse function.
 
 mod expression;
 mod identifier;
