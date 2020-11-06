@@ -39,6 +39,7 @@ pub fn parse_keyword(s: Span) -> ParseResult<()> {
         keyword_with,
         alt((
             keyword_default,
+            keyword_if,
             keyword_throw,
             keyword_delete,
             keyword_in,
