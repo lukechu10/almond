@@ -1,7 +1,7 @@
 //! Utilities
 
 use crate::parser::*;
-use nom::{branch::*, bytes::complete::*, combinator::*, IResult};
+use nom::{branch::*, bytes::complete::*, combinator::*, IResult, Parser};
 
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 pub type ParseResult<'a, T> = IResult<Span<'a>, T>;
@@ -89,6 +89,28 @@ pub fn spaces1(s: Span) -> IResult<Span, ()> {
         return Ok((s, ()));
     }
     value((), many1(space))(s)
+}
+
+/// Alias for `terminated(f, spaces0)`.
+pub fn ws0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
+where
+    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+{
+    move |input: Span<'a>| {
+        let (input, o1) = f.parse(input)?;
+        spaces0.parse(input).map(|(i, _)| (i, o1))
+    }
+}
+
+/// Alias for `terminated(f, spaces1)`.
+pub fn ws1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
+where
+    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+{
+    move |input: Span<'a>| {
+        let (input, o1) = f.parse(input)?;
+        spaces1.parse(input).map(|(i, _)| (i, o1))
+    }
 }
 
 #[cfg(test)]

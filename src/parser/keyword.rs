@@ -16,7 +16,7 @@ pub fn reserved_word(s: Span) -> ParseResult<()> {
 
 /// Succeeds if parsed is a keyword. Use `reserved_word` with `not` instead to check if an identifier is not a reserved word.
 pub fn keyword(s: Span) -> ParseResult<()> {
-    alt((
+    ws0(alt((
         keyword_break,
         keyword_do,
         keyword_instanceof,
@@ -44,7 +44,7 @@ pub fn keyword(s: Span) -> ParseResult<()> {
             keyword_in,
             keyword_try,
         )),
-    ))(s)
+    )))(s)
 }
 
 pub fn future_reserved_word_lax(s: Span) -> ParseResult<()> {

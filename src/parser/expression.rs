@@ -20,8 +20,9 @@ pub fn primary_expr(s: Span) -> IResult<Span, Node> {
 
 pub fn this_expr(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    terminated(tag("this"), spaces0)(s)?;
+    let (s, _) = tag("this")(s)?;
     let (s, end) = position(s)?;
+    let (s, _) = spaces0(s)?;
     Ok((s, NodeKind::ThisExpression.with_pos(start, end)))
 }
 

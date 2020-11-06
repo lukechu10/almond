@@ -7,27 +7,25 @@ use nom::{branch::alt, bytes::complete::*, combinator::*, IResult};
 use nom_locate::position;
 
 pub fn literal(s: Span) -> IResult<Span, Node> {
-    alt((null_lit, bool_lit))(s)
+    ws0(alt((null_lit, bool_lit)))(s)
 }
 
 pub fn null_lit(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, _) = terminated(tag("null"), spaces0)(s)?;
+    let (s, _) = tag("null")(s)?;
     let (s, end) = position(s)?;
+    space0(s)?;
     Ok((s, LiteralValue::Null.into_node_kind().with_pos(start, end)))
 }
 
 pub fn bool_lit(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, val) = terminated(
-        alt((
-            value(false, pair(tag("false"), not(identifier_continue))),
-            value(true, pair(tag("true"), not(identifier_continue))),
-        )),
-        spaces0,
-    )(s)?;
+    let (s, val) = alt((
+        value(false, pair(tag("false"), not(identifier_continue))),
+        value(true, pair(tag("true"), not(identifier_continue))),
+    ))(s)?;
     let (s, end) = position(s)?;
-
+    space0(s)?;
     Ok((
         s,
         LiteralValue::Boolean(val)
@@ -38,13 +36,9 @@ pub fn bool_lit(s: Span) -> IResult<Span, Node> {
 
 pub fn parse_array_lit(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, expr_list) = delimited(
-        terminated(char('['), spaces0),
-        terminated(expr_list, spaces0),
-        terminated(char(']'), spaces0),
-    )(s)?;
+    let (s, expr_list) = delimited(terminated(char('['), spaces0), expr_list, char(']'))(s)?;
     let (s, end) = position(s)?;
-
+    spaces0(s)?;
     Ok((
         s,
         NodeKind::ArrayExpression {
