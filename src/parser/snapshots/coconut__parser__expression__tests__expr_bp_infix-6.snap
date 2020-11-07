@@ -1,0 +1,34 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"(1 + 2) * 3\".into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "*",
+  "left": {
+    "type": "BinaryExpression",
+    "operator": "+",
+    "left": {
+      "type": "Literal",
+      "value": 1.0,
+      "start": 1,
+      "end": 2
+    },
+    "right": {
+      "type": "Literal",
+      "value": 2.0,
+      "start": 5,
+      "end": 6
+    },
+    "start": 1,
+    "end": 6
+  },
+  "right": {
+    "type": "Literal",
+    "value": 3.0,
+    "start": 10,
+    "end": 11
+  },
+  "start": 1,
+  "end": 11
+}

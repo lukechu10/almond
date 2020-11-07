@@ -162,10 +162,32 @@ pub fn parse_lhs_expr(s: Span) -> ParseResult<Node> {
 //     ws0(alt((prefix_expr, postfix_expr)))(s)
 // }
 
+/// Pratt parsing for prefix operators. Called in `parse_expr_bp`.
+fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
+    let (s, start) = position(s)?;
+    let (s, (unary_op, BindingPower(_, right_bp))) = parse_prefix_operator(s)?;
+    let (s, rhs) = parse_expr_bp(s, right_bp)?;
+    let (s, end) = position(s)?;
+
+    let node_kind = match unary_op {
+        PrefixOperator::Unary(unary_op) => NodeKind::UnaryExpression {
+            argument: Box::new(rhs),
+            operator: unary_op,
+            prefix: true,
+        },
+        PrefixOperator::Update(unary_op) => NodeKind::UpdateExpression {
+            argument: Box::new(rhs),
+            operator: unary_op,
+            prefix: true,
+        },
+    };
+    Ok((s, node_kind.with_pos(start, end)))
+}
+
 /// Pratt parsing for expressions with operator precedence.
 /// Check out [https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html) to see how Pratt parsing works.
 pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
-    let (mut s, mut lhs) = parse_primary_expr(s)?;
+    let (mut s, mut lhs) = alt((parse_prefix_expr, parse_primary_expr))(s)?;
 
     loop {
         // do not override s just yet
@@ -268,12 +290,22 @@ mod tests {
     }
 
     #[test]
-    fn test_expr_bp() {
+    fn test_expr_bp_infix() {
         assert_json_snapshot!(parse_expr("1 + 2".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 - 2 - 3".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 * 2 + 3".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 + 2 * 3".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 * 2 + 3 * 4".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("(1 + 2) * 3".into()).unwrap().1);
+    }
+    #[test]
+    fn test_expr_bp_prefix() {
+        assert_json_snapshot!(parse_expr("-1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("+1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("+(+1)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-1)
+
+        assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
     }
 
     #[test]

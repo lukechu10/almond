@@ -76,12 +76,12 @@ impl Serialize for PropertyKind {
 }
 
 /// An unary operator token.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UnaryOperator {
     Minus,
     Plus,
-    Not,
-    Tilde,
+    LogicalNot,
+    BitwiseNot,
     Typeof,
     Void,
     Delete,
@@ -94,8 +94,8 @@ impl Serialize for UnaryOperator {
         let s = match self {
             UnaryOperator::Minus => "-",
             UnaryOperator::Plus => "+",
-            UnaryOperator::Not => "!",
-            UnaryOperator::Tilde => "~",
+            UnaryOperator::LogicalNot => "!",
+            UnaryOperator::BitwiseNot => "~",
             UnaryOperator::Typeof => "typeof",
             UnaryOperator::Void => "void",
             UnaryOperator::Delete => "delete",
@@ -106,7 +106,7 @@ impl Serialize for UnaryOperator {
 }
 
 /// An update (increment or decrement) operator token.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum UpdateOperator {
     Increment,
     Decrement,

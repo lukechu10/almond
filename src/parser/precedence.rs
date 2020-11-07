@@ -189,3 +189,73 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
         // TODO
     )))(s)
 }
+
+#[derive(Debug, Copy, Clone)]
+pub enum PrefixOperator {
+    Unary(UnaryOperator),
+    Update(UpdateOperator),
+}
+impl From<UnaryOperator> for PrefixOperator {
+    fn from(op: UnaryOperator) -> Self {
+        PrefixOperator::Unary(op)
+    }
+}
+impl From<UpdateOperator> for PrefixOperator {
+    fn from(op: UpdateOperator) -> Self {
+        PrefixOperator::Update(op)
+    }
+}
+
+/// Parses a unary (prefix) operator.
+/// Returns a tuple containing the operator and the operator binding power.
+/// Refer to [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence) for details on JS operator precedence.
+/// # Binding power
+/// The binding power of the operator is based on the Mozilla documentation with some modifications for associativity.  
+/// The lowest binding power for an operator is 1. Precedence 0 is to accept any expression.
+///
+/// The minimum of the left and right binding powers is always an odd number or `-1` (left for prefix).
+/// The maximum of the left and right binding powers is the double of the precedence on the Mozilla documentation page.
+/// # Example
+/// * Unary Minus - Unary Minus has a precedence of 17 and is prefix. **Binding power**: `(-1, 34)`.
+///
+/// Returns `Err` if cannot parse a valid binary operator.
+pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPower)> {
+    ws0(alt((
+        // Update
+        // Note: Update is matched first to prevent "+" and "-" to be matched first.
+        value(
+            (UpdateOperator::Increment.into(), BindingPower(-1, 34)),
+            tag("++"),
+        ),
+        value(
+            (UpdateOperator::Decrement.into(), BindingPower(-1, 34)),
+            tag("--"),
+        ),
+        // Unary
+        value(
+            (UnaryOperator::Minus.into(), BindingPower(-1, 34)),
+            tag("-"),
+        ),
+        value((UnaryOperator::Plus.into(), BindingPower(-1, 34)), tag("+")),
+        value(
+            (UnaryOperator::LogicalNot.into(), BindingPower(-1, 34)),
+            tag("!"),
+        ),
+        value(
+            (UnaryOperator::BitwiseNot.into(), BindingPower(-1, 34)),
+            tag("~"),
+        ),
+        value(
+            (UnaryOperator::Typeof.into(), BindingPower(-1, 34)),
+            keyword_typeof,
+        ),
+        value(
+            (UnaryOperator::Void.into(), BindingPower(-1, 34)),
+            keyword_void,
+        ),
+        value(
+            (UnaryOperator::Delete.into(), BindingPower(-1, 34)),
+            keyword_delete,
+        ),
+    )))(s)
+}

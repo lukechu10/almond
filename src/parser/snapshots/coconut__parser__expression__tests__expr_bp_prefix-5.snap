@@ -1,0 +1,17 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"++x\".into()).unwrap().1"
+---
+{
+  "type": "UpdateExpression",
+  "operator": "++",
+  "argument": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 2,
+    "end": 3
+  },
+  "prefix": true,
+  "start": 0,
+  "end": 3
+}
