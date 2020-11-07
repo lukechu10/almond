@@ -1,0 +1,29 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"x++ + 1\".into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "+",
+  "left": {
+    "type": "UpdateExpression",
+    "operator": "++",
+    "argument": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 0,
+      "end": 1
+    },
+    "prefix": false,
+    "start": 0,
+    "end": 3
+  },
+  "right": {
+    "type": "Literal",
+    "value": 1.0,
+    "start": 6,
+    "end": 7
+  },
+  "start": 0,
+  "end": 7
+}

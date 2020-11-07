@@ -178,7 +178,7 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
     let (mut s, mut lhs) = alt((parse_prefix_expr, parse_primary_expr))(s)?;
 
     loop {
-        if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _)))) = parse_postfix_operator(s) {
+        if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _), mut end))) = postfix_operator(s) {
             if left_bp < min_bp {
                 break;
             }
@@ -193,8 +193,16 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
                 },
                 PostfixOperator::ComputedMember => {
                     // array access
-                    let (s_tmp, property) = terminated(parse_expr, ws0(char(']')))(s)?;
+                    let (s_tmp, property) = terminated(parse_expr, char(']'))(s)?;
                     s = s_tmp;
+
+                    let (s_tmp, end_tmp) = position(s)?;
+                    s = s_tmp;
+                    end = end_tmp;
+
+                    let (s_tmp, _) = sp0(s)?;
+                    s = s_tmp;
+
                     NodeKind::MemberExpression {
                         object: Box::new(lhs),
                         property: Box::new(property),
@@ -202,9 +210,6 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
                     }
                 }
             };
-
-            let (s_tmp, end) = position(s)?;
-            s = s_tmp;
 
             lhs = node_kind.with_pos(start, end);
 
@@ -333,6 +338,7 @@ mod tests {
     #[test]
     fn test_expr_bp_postfix() {
         assert_json_snapshot!(parse_expr("x++".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x++\t".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x--".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x++ + 1".into()).unwrap().1); // ++ binds tighter than +
     }

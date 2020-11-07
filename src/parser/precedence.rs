@@ -5,6 +5,7 @@ use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
 use nom::{branch::alt, bytes::complete::*, combinator::*};
+use nom_locate::position;
 
 #[derive(Debug, Copy, Clone)]
 pub struct BindingPower(pub i32, pub i32);
@@ -275,6 +276,8 @@ impl From<UpdateOperator> for PostfixOperator {
 /// Parses a unary (postfix) operator.
 /// Returns a tuple containing the operator and the operator binding power.
 /// Refer to [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence) for details on JS operator precedence.
+///
+/// **Note**: Unlike other operator parsers, this parser also returns an additional `end` field for diagnostics to make it easier to find end of expression without trailing whitespace.
 /// # Binding power
 /// The binding power of the operator is based on the Mozilla documentation with some modifications for associativity.  
 /// The lowest binding power for an operator is 1. Precedence 0 is to accept any expression.
@@ -285,8 +288,8 @@ impl From<UpdateOperator> for PostfixOperator {
 /// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(36, -1)`.
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
-pub fn parse_postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower)> {
-    ws0(alt((
+pub fn postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower, Span)> {
+    let (s, (postfix_op, bp)) = alt((
         value(
             (UpdateOperator::Increment.into(), BindingPower(36, -1)),
             tag("++"),
@@ -299,5 +302,9 @@ pub fn parse_postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingP
             (PostfixOperator::ComputedMember, BindingPower(40, -1)),
             tag("["),
         ),
-    )))(s)
+    ))(s)?;
+    let (s, end) = position(s)?;
+    let (s, _) = sp0(s)?;
+
+    Ok((s, (postfix_op, bp, end)))
 }
