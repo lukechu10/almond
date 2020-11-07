@@ -1,0 +1,16 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"foo()\".into()).unwrap().1"
+---
+{
+  "type": "CallExpression",
+  "callee": {
+    "type": "Identifier",
+    "name": "foo",
+    "start": 0,
+    "end": 3
+  },
+  "arguments": [],
+  "start": 0,
+  "end": 5
+}

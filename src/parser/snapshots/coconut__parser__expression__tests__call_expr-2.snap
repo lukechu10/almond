@@ -1,0 +1,28 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"foo.bar()\".into()).unwrap().1"
+---
+{
+  "type": "CallExpression",
+  "callee": {
+    "type": "MemberExpression",
+    "object": {
+      "type": "Identifier",
+      "name": "foo",
+      "start": 0,
+      "end": 3
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "bar",
+      "start": 4,
+      "end": 7
+    },
+    "computed": false,
+    "start": 0,
+    "end": 7
+  },
+  "arguments": [],
+  "start": 0,
+  "end": 9
+}

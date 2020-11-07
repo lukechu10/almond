@@ -217,7 +217,7 @@ impl From<UpdateOperator> for PrefixOperator {
 /// The minimum of the left and right binding powers is always an odd number or `-1` (left for prefix).
 /// The maximum of the left and right binding powers is the double of the precedence on the Mozilla documentation page.
 /// # Example
-/// * Unary Minus - Unary Minus has a precedence of 17 and is prefix. **Binding power**: `(-1, 34)`.
+/// * Unary Minus - Unary Minus has a precedence of 17 and is prefix. **Binding power**: `(-1, 33)`.
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
 pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPower)> {
@@ -225,37 +225,37 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
         // Update
         // Note: Update is matched first to prevent "+" and "-" to be matched first.
         value(
-            (UpdateOperator::Increment.into(), BindingPower(-1, 34)),
+            (UpdateOperator::Increment.into(), BindingPower(-1, 33)),
             tag("++"),
         ),
         value(
-            (UpdateOperator::Decrement.into(), BindingPower(-1, 34)),
+            (UpdateOperator::Decrement.into(), BindingPower(-1, 33)),
             tag("--"),
         ),
         // Unary
         value(
-            (UnaryOperator::Minus.into(), BindingPower(-1, 34)),
+            (UnaryOperator::Minus.into(), BindingPower(-1, 33)),
             tag("-"),
         ),
-        value((UnaryOperator::Plus.into(), BindingPower(-1, 34)), tag("+")),
+        value((UnaryOperator::Plus.into(), BindingPower(-1, 33)), tag("+")),
         value(
-            (UnaryOperator::LogicalNot.into(), BindingPower(-1, 34)),
+            (UnaryOperator::LogicalNot.into(), BindingPower(-1, 33)),
             tag("!"),
         ),
         value(
-            (UnaryOperator::BitwiseNot.into(), BindingPower(-1, 34)),
+            (UnaryOperator::BitwiseNot.into(), BindingPower(-1, 33)),
             tag("~"),
         ),
         value(
-            (UnaryOperator::Typeof.into(), BindingPower(-1, 34)),
+            (UnaryOperator::Typeof.into(), BindingPower(-1, 33)),
             keyword_typeof,
         ),
         value(
-            (UnaryOperator::Void.into(), BindingPower(-1, 34)),
+            (UnaryOperator::Void.into(), BindingPower(-1, 33)),
             keyword_void,
         ),
         value(
-            (UnaryOperator::Delete.into(), BindingPower(-1, 34)),
+            (UnaryOperator::Delete.into(), BindingPower(-1, 33)),
             keyword_delete,
         ),
     )))(s)
@@ -266,6 +266,8 @@ pub enum PostfixOperator {
     Update(UpdateOperator),
     /// Eats `[` (does not eat `]`).
     ComputedMember,
+    /// Eats `(` (does not eat `)`).
+    FuncCall,
 }
 impl From<UpdateOperator> for PostfixOperator {
     fn from(op: UpdateOperator) -> Self {
@@ -285,22 +287,26 @@ impl From<UpdateOperator> for PostfixOperator {
 /// The minimum of the left and right binding powers is always an odd number or `-1` (left for prefix).
 /// The maximum of the left and right binding powers is the double of the precedence on the Mozilla documentation page.
 /// # Example
-/// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(36, -1)`.
+/// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(35, -1)`.
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
 pub fn postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower, Span)> {
     let (s, (postfix_op, bp)) = alt((
         value(
-            (UpdateOperator::Increment.into(), BindingPower(36, -1)),
+            (UpdateOperator::Increment.into(), BindingPower(35, -1)),
             tag("++"),
         ),
         value(
-            (UpdateOperator::Decrement.into(), BindingPower(36, -1)),
+            (UpdateOperator::Decrement.into(), BindingPower(35, -1)),
             tag("--"),
         ),
         value(
-            (PostfixOperator::ComputedMember, BindingPower(40, -1)),
+            (PostfixOperator::ComputedMember, BindingPower(39, -1)),
             tag("["),
+        ),
+        value(
+            (PostfixOperator::FuncCall, BindingPower(39, -1)),
+            tag("("),
         ),
     ))(s)?;
     let (s, end) = position(s)?;

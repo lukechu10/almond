@@ -128,28 +128,6 @@ pub fn parse_member_expr(s: Span) -> ParseResult<Node> {
     ))(s)
 }
 
-pub fn parse_call_expr(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, (callee, arguments)) = pair(
-        parse_member_expr,
-        delimited(ws0(char('(')), parse_expr_list, char(')')),
-    )(s)?;
-    let (s, end) = position(s)?;
-    let (s, _) = sp0(s)?;
-    Ok((
-        s,
-        NodeKind::CallExpression {
-            callee: Box::new(callee),
-            arguments,
-        }
-        .with_pos(start, end),
-    ))
-}
-
-pub fn parse_lhs_expr(s: Span) -> ParseResult<Node> {
-    alt((parse_call_expr, parse_member_expr))(s)
-}
-
 /// Pratt parsing for prefix operators. Called in `parse_expr_bp`.
 fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
@@ -207,6 +185,23 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
                         object: Box::new(lhs),
                         property: Box::new(property),
                         computed: true,
+                    }
+                }
+                PostfixOperator::FuncCall => {
+                    // array access
+                    let (s_tmp, arguments) = terminated(parse_expr_list, char(')'))(s)?;
+                    s = s_tmp;
+
+                    let (s_tmp, end_tmp) = position(s)?;
+                    s = s_tmp;
+                    end = end_tmp;
+
+                    let (s_tmp, _) = sp0(s)?;
+                    s = s_tmp;
+
+                    NodeKind::CallExpression {
+                        callee: Box::new(lhs),
+                        arguments,
                     }
                 }
             };
@@ -307,13 +302,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_call_expr() {
-        assert_json_snapshot!(parse_call_expr("foo()".into()).unwrap().1);
-        assert_json_snapshot!(parse_call_expr("foo.bar()".into()).unwrap().1);
-        assert_json_snapshot!(parse_call_expr("foo.bar.baz()".into()).unwrap().1);
-        assert_json_snapshot!(parse_call_expr("foo.bar(baz)".into()).unwrap().1);
-        assert_json_snapshot!(parse_call_expr("foo.bar(baz, 1, 2, 3)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("foo()".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("foo.bar()".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("foo.bar.baz()".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("foo.bar(baz)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("foo.bar(baz, 1, 2, 3)".into()).unwrap().1);
     }
 
     #[test]
@@ -338,7 +332,7 @@ mod tests {
     #[test]
     fn test_expr_bp_postfix() {
         assert_json_snapshot!(parse_expr("x++".into()).unwrap().1);
-        assert_json_snapshot!(parse_expr("x++\t".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x++\t".into()).unwrap().1); // make sure end pos does not include trailing whitespace
         assert_json_snapshot!(parse_expr("x--".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x++ + 1".into()).unwrap().1); // ++ binds tighter than +
     }
@@ -356,5 +350,6 @@ mod tests {
     fn test_expr_bp_member_expr() {
         assert_json_snapshot!(parse_expr("x.y".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x.y.z".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x.y[z]".into()).unwrap().1);
     }
 }
