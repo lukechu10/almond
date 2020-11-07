@@ -150,34 +150,22 @@ pub fn parse_lhs_expr(s: Span) -> ParseResult<Node> {
     alt((parse_call_expr, parse_member_expr))(s)
 }
 
-// fn prefix_expr(s: Span) -> ParseResult<Node> {
-
-// }
-
-// fn postfix_expr(s: Span) -> ParseResult<Node> {
-
-// }
-
-// pub fn parse_unary_expr(s: Span) -> ParseResult<Node> {
-//     ws0(alt((prefix_expr, postfix_expr)))(s)
-// }
-
 /// Pratt parsing for prefix operators. Called in `parse_expr_bp`.
 fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
-    let (s, (unary_op, BindingPower(_, right_bp))) = parse_prefix_operator(s)?;
+    let (s, (prefix_op, BindingPower(_, right_bp))) = parse_prefix_operator(s)?;
     let (s, rhs) = parse_expr_bp(s, right_bp)?;
     let (s, end) = position(s)?;
 
-    let node_kind = match unary_op {
-        PrefixOperator::Unary(unary_op) => NodeKind::UnaryExpression {
+    let node_kind = match prefix_op {
+        PrefixOperator::Unary(prefix_op) => NodeKind::UnaryExpression {
             argument: Box::new(rhs),
-            operator: unary_op,
+            operator: prefix_op,
             prefix: true,
         },
-        PrefixOperator::Update(unary_op) => NodeKind::UpdateExpression {
+        PrefixOperator::Update(prefix_op) => NodeKind::UpdateExpression {
             argument: Box::new(rhs),
-            operator: unary_op,
+            operator: prefix_op,
             prefix: true,
         },
     };
@@ -190,6 +178,24 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
     let (mut s, mut lhs) = alt((parse_prefix_expr, parse_primary_expr))(s)?;
 
     loop {
+        if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _)))) = parse_postfix_operator(s) {
+            if left_bp < min_bp {
+                break;
+            }
+            s = s_tmp;
+
+            let start = lhs.clone().start;
+            let (s_tmp, end) = position(s)?;
+            s = s_tmp;
+
+            lhs = NodeKind::UpdateExpression {
+                argument: Box::new(lhs),
+                operator: postfix_op,
+                prefix: false,
+            }
+            .with_pos(start, end)
+        }
+
         // do not override s just yet
         let (s_tmp, (op, BindingPower(left_bp, right_bp))) = match parse_infix_operator(s) {
             Ok(res) => res,
@@ -306,6 +312,12 @@ mod tests {
         assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-1)
 
         assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_expr_bp_postfix() {
+        assert_json_snapshot!(parse_expr("x++".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x--".into()).unwrap().1);
     }
 
     #[test]

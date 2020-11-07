@@ -259,3 +259,23 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
         ),
     )))(s)
 }
+
+/// Parses a unary (postfix) operator.
+/// Returns a tuple containing the operator and the operator binding power.
+/// Refer to [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence) for details on JS operator precedence.
+/// # Binding power
+/// The binding power of the operator is based on the Mozilla documentation with some modifications for associativity.  
+/// The lowest binding power for an operator is 1. Precedence 0 is to accept any expression.
+///
+/// The minimum of the left and right binding powers is always an odd number or `-1` (left for prefix).
+/// The maximum of the left and right binding powers is the double of the precedence on the Mozilla documentation page.
+/// # Example
+/// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(36, -1)`.
+///
+/// Returns `Err` if cannot parse a valid binary operator.
+pub fn parse_postfix_operator(s: Span) -> ParseResult<(UpdateOperator, BindingPower)> {
+    ws0(alt((
+        value((UpdateOperator::Increment, BindingPower(36, -1)), tag("++")),
+        value((UpdateOperator::Decrement, BindingPower(36, -1)), tag("--")),
+    )))(s)
+}
