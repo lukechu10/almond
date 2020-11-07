@@ -27,7 +27,7 @@ pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, _) = tag("this")(s)?;
     let (s, end) = position(s)?;
-    let (s, _) = spaces0(s)?;
+    let (s, _) = sp0(s)?;
     Ok((s, NodeKind::ThisExpression.with_pos(start, end)))
 }
 
@@ -42,9 +42,17 @@ fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
     ))(s)
 }
 
-pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Option<Node>>> {
+pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> {
     terminated(
         separated_list0(ws0(char(',')), parse_opt_expr_in_list),
+        // eat trailing comma
+        ws0(opt(char(','))),
+    )(s)
+}
+
+pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
+    terminated(
+        separated_list0(ws0(char(',')), parse_expr),
         // eat trailing comma
         ws0(opt(char(','))),
     )(s)
@@ -57,7 +65,7 @@ fn parse_computed_member_expr(s: Span) -> ParseResult<Node> {
         delimited(ws0(char('[')), parse_expr, char(']')),
     ))(s)?;
     let (s, end): (Span, Span) = position(s)?;
-    let (s, _) = spaces0(s)?;
+    let (s, _) = sp0(s)?;
     Ok((
         s,
         NodeKind::MemberExpression {
@@ -74,7 +82,7 @@ fn parse_prop_member_expr(s: Span) -> ParseResult<Node> {
     let (s, (object, property)) =
         tuple((parse_identifier, preceded(ws0(char('.')), parse_identifier)))(s)?;
     let (s, end): (Span, Span) = position(s)?;
-    let (s, _) = spaces0(s)?;
+    let (s, _) = sp0(s)?;
     Ok((
         s,
         NodeKind::MemberExpression {
@@ -86,11 +94,33 @@ fn parse_prop_member_expr(s: Span) -> ParseResult<Node> {
     ))
 }
 
+fn parse_new_expr(s: Span) -> ParseResult<Node> {
+    let (s, start) = position(s)?;
+    let (s, (callee, arguments)) = preceded(
+        ws1(keyword_new),
+        pair(
+            parse_member_expr,
+            delimited(ws0(char('(')), parse_expr_list, char(')')),
+        ),
+    )(s)?;
+    let (s, end) = position(s)?;
+    let (s, _) = sp0(s)?;
+    Ok((
+        s,
+        NodeKind::NewExpression {
+            callee: Box::new(callee),
+            arguments,
+        }
+        .with_pos(start, end),
+    ))
+}
+
 pub fn parse_member_expr(s: Span) -> ParseResult<Node> {
     alt((
         terminated(parse_primary_expr, not(alt((char('.'), char('['))))),
         parse_computed_member_expr, // '['
         parse_prop_member_expr,     // '.'
+        parse_new_expr,             // new
     ))(s)
 }
 
@@ -134,5 +164,13 @@ mod tests {
         assert_json_snapshot!(parse_member_expr("a[1]".into()).unwrap().1);
         assert_json_snapshot!(parse_member_expr("a[0]".into()).unwrap().1);
         assert_json_snapshot!(parse_member_expr("a[[]]".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_new_expr() {
+        assert_json_snapshot!(parse_member_expr("new Array()".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("new Array(1)".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("new Array(1,)".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("new Foo.Bar(true)".into()).unwrap().1);
     }
 }

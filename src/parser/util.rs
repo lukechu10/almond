@@ -73,43 +73,43 @@ pub fn comment(s: Span) -> IResult<Span, ()> {
     value((), alt((single_line_comment, multi_line_comment)))(s)
 }
 
-pub fn space(s: Span) -> ParseResult<()> {
+pub fn sp(s: Span) -> ParseResult<()> {
     alt((whitespace, line_terminator, comment))(s)
 }
 
-pub fn spaces0(s: Span) -> IResult<Span, ()> {
+pub fn sp0(s: Span) -> IResult<Span, ()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }
-    value((), many0(space))(s)
+    value((), many0(sp))(s)
 }
 
-pub fn spaces1(s: Span) -> IResult<Span, ()> {
+pub fn sp1(s: Span) -> IResult<Span, ()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }
-    value((), many1(space))(s)
+    value((), many1(sp))(s)
 }
 
-/// Alias for `terminated(f, spaces0)`.
+/// Alias for `terminated(f, sp0)`.
 pub fn ws0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
     F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
 {
     move |input: Span<'a>| {
         let (input, o1) = f.parse(input)?;
-        spaces0.parse(input).map(|(i, _)| (i, o1))
+        sp0.parse(input).map(|(i, _)| (i, o1))
     }
 }
 
-/// Alias for `terminated(f, spaces1)`.
+/// Alias for `terminated(f, sp1)`.
 pub fn ws1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
     F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
 {
     move |input: Span<'a>| {
         let (input, o1) = f.parse(input)?;
-        spaces1.parse(input).map(|(i, _)| (i, o1))
+        sp1.parse(input).map(|(i, _)| (i, o1))
     }
 }
 

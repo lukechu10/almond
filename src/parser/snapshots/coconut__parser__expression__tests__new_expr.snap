@@ -1,0 +1,16 @@
+---
+source: src/parser/expression.rs
+expression: "parse_member_expr(\"new Array()\".into()).unwrap().1"
+---
+{
+  "type": "NewExpression",
+  "callee": {
+    "type": "Identifier",
+    "name": "Array",
+    "start": 4,
+    "end": 9
+  },
+  "arguments": [],
+  "start": 0,
+  "end": 11
+}

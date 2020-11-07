@@ -44,7 +44,7 @@ pub fn parse_identifier(s: Span) -> IResult<Span, Node> {
     )(s)?;
     let (s, end) = position(s)?;
 
-    let (s, _) = spaces0(s)?;
+    let (s, _) = sp0(s)?;
     Ok((s, NodeKind::Identifier { name }.with_pos(start, end)))
 }
 

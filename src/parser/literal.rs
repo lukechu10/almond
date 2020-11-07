@@ -67,9 +67,9 @@ fn hex_int_lit(s: Span) -> ParseResult<f64> {
 
 pub fn array_lit(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, expr_list) = delimited(ws0(char('[')), parse_expr_list, char(']'))(s)?;
+    let (s, expr_list) = delimited(ws0(char('[')), parse_expr_list_with_opt_expr, char(']'))(s)?;
     let (s, end) = position(s)?;
-    spaces0(s)?;
+    sp0(s)?;
     Ok((
         s,
         NodeKind::ArrayExpression {
