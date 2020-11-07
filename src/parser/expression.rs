@@ -171,6 +171,7 @@ mod tests {
         assert_json_snapshot!(parse_member_expr("new Array()".into()).unwrap().1);
         assert_json_snapshot!(parse_member_expr("new Array(1)".into()).unwrap().1);
         assert_json_snapshot!(parse_member_expr("new Array(1,)".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("new Array(1,2)".into()).unwrap().1);
         assert_json_snapshot!(parse_member_expr("new Foo.Bar(true)".into()).unwrap().1);
     }
 }
