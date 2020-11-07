@@ -18,8 +18,8 @@ pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
     alt((
         parse_this_expr,
         parse_identifier,
-        parse_paren_expr,
         literal::parse_literal,
+        parse_paren_expr,
     ))(s)
 }
 
@@ -35,13 +35,81 @@ pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
     delimited(ws0(char('(')), parse_expr, ws0(char(')')))(s)
 }
 
-pub fn parse_expr_list(s: Span) -> IResult<Span, Vec<Option<Node>>> {
-    separated_list0(ws0(char(',')), opt(parse_expr))(s)
+fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
+    alt((
+        value(None, peek(char(','))),
+        map(parse_expr, |expr| Some(expr)),
+    ))(s)
 }
+
+pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Option<Node>>> {
+    terminated(
+        separated_list0(ws0(char(',')), parse_opt_expr_in_list),
+        // eat trailing comma
+        ws0(opt(char(','))),
+    )(s)
+}
+
+fn parse_computed_member_expr(s: Span) -> ParseResult<Node> {
+    let (s, start) = position(s)?;
+    let (s, (object, property)) = tuple((
+        parse_identifier,
+        delimited(ws0(char('[')), parse_expr, char(']')),
+    ))(s)?;
+    let (s, end): (Span, Span) = position(s)?;
+    let (s, _) = spaces0(s)?;
+    Ok((
+        s,
+        NodeKind::MemberExpression {
+            computed: true,
+            property: Box::new(property),
+            object: Box::new(object),
+        }
+        .with_pos(start, end),
+    ))
+}
+
+fn parse_prop_member_expr(s: Span) -> ParseResult<Node> {
+    let (s, start) = position(s)?;
+    let (s, (object, property)) =
+        tuple((parse_identifier, preceded(ws0(char('.')), parse_identifier)))(s)?;
+    let (s, end): (Span, Span) = position(s)?;
+    let (s, _) = spaces0(s)?;
+    Ok((
+        s,
+        NodeKind::MemberExpression {
+            computed: false,
+            property: Box::new(property),
+            object: Box::new(object),
+        }
+        .with_pos(start, end),
+    ))
+}
+
+pub fn parse_member_expr(s: Span) -> ParseResult<Node> {
+    alt((
+        terminated(parse_primary_expr, not(alt((char('.'), char('['))))),
+        parse_computed_member_expr, // '['
+        parse_prop_member_expr,     // '.'
+    ))(s)
+}
+
+// fn prefix_expr(s: Span) -> ParseResult<Node> {
+
+// }
+
+// fn postfix_expr(s: Span) -> ParseResult<Node> {
+
+// }
+
+// pub fn parse_unary_expr(s: Span) -> ParseResult<Node> {
+//     ws0(alt((prefix_expr, postfix_expr)))(s)
+// }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_json_snapshot;
 
     #[test]
     fn smoke_test_this_expr() {
@@ -58,5 +126,13 @@ mod tests {
     #[test]
     fn smoke_test_paren_expr() {
         parse_paren_expr("(true)".into()).unwrap();
+    }
+
+    #[test]
+    fn test_member_expr() {
+        assert_json_snapshot!(parse_member_expr("a.b".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("a[1]".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("a[0]".into()).unwrap().1);
+        assert_json_snapshot!(parse_member_expr("a[[]]".into()).unwrap().1);
     }
 }

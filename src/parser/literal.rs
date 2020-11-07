@@ -7,7 +7,8 @@ use nom::{branch::alt, bytes::complete::*, combinator::*, number::complete::*, I
 use nom_locate::position;
 
 pub fn parse_literal(s: Span) -> IResult<Span, Node> {
-    ws0(alt((null_lit, bool_lit, array_lit)))(s)
+    ws0(alt((null_lit, bool_lit, numeric_lit, array_lit)))(s)
+    // TODO: string_lit and object_lit
 }
 
 pub fn null_lit(s: Span) -> IResult<Span, Node> {
@@ -34,12 +35,7 @@ pub fn bool_lit(s: Span) -> IResult<Span, Node> {
 
 pub fn numeric_lit(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
-
-    let (s, sign) =
-        ws0(opt(char('-')))(s).map(|(s, minus)| (s, if minus.is_some() { -1 } else { 1 }))?;
-
-    let (s, num) =
-        alt((octal_int_lit, hex_int_lit, decimal_lit))(s).map(|(s, num)| (s, sign as f64 * num))?;
+    let (s, num) = alt((octal_int_lit, hex_int_lit, decimal_lit))(s)?;
     let (s, end) = position(s)?;
     Ok((
         s,
@@ -71,7 +67,7 @@ fn hex_int_lit(s: Span) -> ParseResult<f64> {
 
 pub fn array_lit(s: Span) -> IResult<Span, Node> {
     let (s, start) = position(s)?;
-    let (s, expr_list) = delimited(terminated(char('['), spaces0), parse_expr_list, char(']'))(s)?;
+    let (s, expr_list) = delimited(ws0(char('[')), parse_expr_list, char(']'))(s)?;
     let (s, end) = position(s)?;
     spaces0(s)?;
     Ok((
@@ -86,6 +82,7 @@ pub fn array_lit(s: Span) -> IResult<Span, Node> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::assert_json_snapshot;
 
     #[test]
     fn test_bool_lit() {
@@ -125,24 +122,8 @@ mod tests {
             LiteralValue::Number(0.0).into_node_kind()
         );
         assert_eq!(
-            numeric_lit("-123".into()).unwrap().1.kind,
-            LiteralValue::Number(-123.0).into_node_kind()
-        );
-        assert_eq!(
-            numeric_lit("-0".into()).unwrap().1.kind,
-            LiteralValue::Number(-0.0).into_node_kind()
-        );
-        assert_eq!(
-            numeric_lit("-0123".into()).unwrap().1.kind,
-            LiteralValue::Number(-83.0).into_node_kind() // in octal
-        );
-        assert_eq!(
-            numeric_lit("-0x123".into()).unwrap().1.kind,
-            LiteralValue::Number(-291.0).into_node_kind() // in octal
-        );
-        assert_eq!(
-            numeric_lit("- 123".into()).unwrap().1.kind,
-            LiteralValue::Number(-123.0).into_node_kind()
+            numeric_lit("0x0".into()).unwrap().1.kind,
+            LiteralValue::Number(0.0).into_node_kind() // hex 0
         );
     }
 
@@ -160,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_array_lit_with_trailing_comma() {
-        array_lit("[ true, true, ]\n".into()).unwrap();
+        assert_json_snapshot!(array_lit("[ true, true, ]\n".into()).unwrap().1);
         array_lit("[   true,\n true,\t ]\t".into()).unwrap();
     }
 }

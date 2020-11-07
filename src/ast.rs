@@ -516,7 +516,7 @@ pub enum NodeKind<'a> {
     MemberExpression {
         /// `type: Expression`
         object: Box<Node<'a>>,
-        /// `type: Expression`
+        /// `type: Identifier | Literal`
         property: Box<Node<'a>>,
         computed: bool,
     },

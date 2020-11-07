@@ -1,0 +1,23 @@
+---
+source: src/parser/literal.rs
+expression: "array_lit(\"[ true, true, ]\\n\".into()).unwrap().1"
+---
+{
+  "type": "ArrayExpression",
+  "elements": [
+    {
+      "type": "Literal",
+      "value": true,
+      "start": 2,
+      "end": 6
+    },
+    {
+      "type": "Literal",
+      "value": true,
+      "start": 8,
+      "end": 12
+    }
+  ],
+  "start": 0,
+  "end": 15
+}
