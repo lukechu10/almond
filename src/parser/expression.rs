@@ -261,8 +261,10 @@ mod tests {
     }
 
     #[test]
-    fn smoke_test_paren_expr() {
-        parse_paren_expr("(true)".into()).unwrap();
+    fn test_paren_expr() {
+        assert_json_snapshot!(parse_expr("(1)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("(((1)))".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("(((1 + 1)))".into()).unwrap().1);
     }
 
     #[test]
@@ -304,6 +306,7 @@ mod tests {
         assert_json_snapshot!(parse_expr("1 * 2 + 3 * 4".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("(1 + 2) * 3".into()).unwrap().1);
     }
+
     #[test]
     fn test_expr_bp_prefix() {
         assert_json_snapshot!(parse_expr("-1".into()).unwrap().1);

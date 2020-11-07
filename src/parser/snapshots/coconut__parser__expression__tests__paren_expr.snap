@@ -1,0 +1,10 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"(1)\".into()).unwrap().1"
+---
+{
+  "type": "Literal",
+  "value": 1.0,
+  "start": 1,
+  "end": 2
+}

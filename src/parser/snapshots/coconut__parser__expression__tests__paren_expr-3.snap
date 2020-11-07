@@ -1,0 +1,22 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"(((1 + 1)))\".into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "+",
+  "left": {
+    "type": "Literal",
+    "value": 1.0,
+    "start": 3,
+    "end": 4
+  },
+  "right": {
+    "type": "Literal",
+    "value": 1.0,
+    "start": 7,
+    "end": 8
+  },
+  "start": 3,
+  "end": 8
+}
