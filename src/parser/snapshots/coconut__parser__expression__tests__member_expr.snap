@@ -1,0 +1,22 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"a.b\".into()).unwrap().1"
+---
+{
+  "type": "MemberExpression",
+  "object": {
+    "type": "Identifier",
+    "name": "a",
+    "start": 0,
+    "end": 1
+  },
+  "property": {
+    "type": "Identifier",
+    "name": "b",
+    "start": 2,
+    "end": 3
+  },
+  "computed": false,
+  "start": 0,
+  "end": 3
+}

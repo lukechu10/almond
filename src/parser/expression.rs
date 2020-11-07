@@ -183,17 +183,32 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
                 break;
             }
             s = s_tmp;
-
             let start = lhs.clone().start;
+
+            let node_kind = match postfix_op {
+                PostfixOperator::Update(postfix_op) => NodeKind::UpdateExpression {
+                    argument: Box::new(lhs),
+                    operator: postfix_op,
+                    prefix: false,
+                },
+                PostfixOperator::ComputedMember => {
+                    // array access
+                    let (s_tmp, property) = terminated(parse_expr, ws0(char(']')))(s)?;
+                    s = s_tmp;
+                    NodeKind::MemberExpression {
+                        object: Box::new(lhs),
+                        property: Box::new(property),
+                        computed: true,
+                    }
+                }
+            };
+
             let (s_tmp, end) = position(s)?;
             s = s_tmp;
 
-            lhs = NodeKind::UpdateExpression {
-                argument: Box::new(lhs),
-                operator: postfix_op,
-                prefix: false,
-            }
-            .with_pos(start, end)
+            lhs = node_kind.with_pos(start, end);
+
+            continue;
         }
 
         // do not override s just yet
@@ -268,13 +283,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_member_expr() {
-        assert_json_snapshot!(parse_member_expr("a.b".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("a.b.c".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("a[1]".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("a[0]".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("a[[]]".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a.b".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a.b.c".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a[1]".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a[0]".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a[[]]".into()).unwrap().1);
     }
 
     #[test]
@@ -313,7 +327,6 @@ mod tests {
         assert_json_snapshot!(parse_expr("+1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("+(+1)".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-1)
-
         assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
     }
 
@@ -321,6 +334,7 @@ mod tests {
     fn test_expr_bp_postfix() {
         assert_json_snapshot!(parse_expr("x++".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x--".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x++ + 1".into()).unwrap().1); // ++ binds tighter than +
     }
 
     #[test]

@@ -260,6 +260,18 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
     )))(s)
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum PostfixOperator {
+    Update(UpdateOperator),
+    /// Eats `[` (does not eat `]`).
+    ComputedMember,
+}
+impl From<UpdateOperator> for PostfixOperator {
+    fn from(op: UpdateOperator) -> Self {
+        PostfixOperator::Update(op)
+    }
+}
+
 /// Parses a unary (postfix) operator.
 /// Returns a tuple containing the operator and the operator binding power.
 /// Refer to [https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence) for details on JS operator precedence.
@@ -273,9 +285,19 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
 /// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(36, -1)`.
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
-pub fn parse_postfix_operator(s: Span) -> ParseResult<(UpdateOperator, BindingPower)> {
+pub fn parse_postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower)> {
     ws0(alt((
-        value((UpdateOperator::Increment, BindingPower(36, -1)), tag("++")),
-        value((UpdateOperator::Decrement, BindingPower(36, -1)), tag("--")),
+        value(
+            (UpdateOperator::Increment.into(), BindingPower(36, -1)),
+            tag("++"),
+        ),
+        value(
+            (UpdateOperator::Decrement.into(), BindingPower(36, -1)),
+            tag("--"),
+        ),
+        value(
+            (PostfixOperator::ComputedMember, BindingPower(40, -1)),
+            tag("["),
+        ),
     )))(s)
 }
