@@ -126,7 +126,7 @@ impl Serialize for UpdateOperator {
 }
 
 /// A binary operator token.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum BinaryOperator {
     EqualsEquals,
     NotEquals,
@@ -187,7 +187,7 @@ impl Serialize for BinaryOperator {
 }
 
 /// An assignment operator token.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum AssignmentOperator {
     Equals,
     PlusEquals,
@@ -233,7 +233,7 @@ impl Serialize for AssignmentOperator {
 }
 
 /// A logical operator token.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum LogicalOperator {
     LogicalOr,
     LogicalAnd,
