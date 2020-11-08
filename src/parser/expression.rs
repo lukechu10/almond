@@ -13,7 +13,7 @@ pub fn parse_expr(s: Span) -> ParseResult<Node> {
 
 /// Alias for `parse_expr_bp(s, 1)`. Should be used when parsing expressions in expression lists.
 /// This prevents matching the sequence (`,`) operator.
-pub fn parse_expr_no_seq(s: Span) -> ParseResult<Node> {
+pub fn expr_no_seq(s: Span) -> ParseResult<Node> {
     parse_expr_bp(s, 1)
 }
 
@@ -45,7 +45,7 @@ pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
     alt((
         value(None, peek(char(','))),
-        map(parse_expr_no_seq, |expr| Some(expr)),
+        map(ws0(expr_no_seq), |expr| Some(expr)),
     ))(s)
 }
 
@@ -59,7 +59,7 @@ pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> 
 
 pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
     terminated(
-        separated_list0(ws0(char(',')), parse_expr_no_seq),
+        separated_list0(ws0(char(',')), ws0(expr_no_seq)),
         // eat trailing comma
         ws0(opt(char(','))),
     )(s)

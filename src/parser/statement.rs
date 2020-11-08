@@ -23,11 +23,11 @@ pub fn parse_stmt_list(s: Span) -> ParseResult<Vec<Node>> {
 }
 
 pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
-    let parse_initializer = preceded(ws0(tag("=")), parse_expr_no_seq);
-    let parse_var_declaration = map(
+    let initializer = preceded(ws0(tag("=")), expr_no_seq);
+    let var_declaration = map(
         tuple((
             position,
-            pair(parse_identifier, opt(parse_initializer)),
+            pair(parse_identifier, opt(initializer)),
             position,
         )),
         |(start, (id, init), end)| {
@@ -38,10 +38,10 @@ pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
             .with_pos(start, end)
         },
     );
-    let mut parse_declaration_list = separated_list1(ws0(tag(",")), parse_var_declaration);
+    let mut parse_declaration_list = separated_list1(ws0(tag(",")), ws0(var_declaration));
 
     let (s, start) = position(s)?;
-    let (s, _) = ws0(keyword_var)(s)?;
+    let (s, _) = ws1(keyword_var)(s)?;
 
     let (s, declarations) = parse_declaration_list(s)?;
 
@@ -75,6 +75,7 @@ mod tests {
         assert_json_snapshot!(parse_stmt("var x, y = 1;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("var x = 1, y;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("var x".into()).unwrap().1); // auto insert semi
+        assert_json_snapshot!(parse_stmt("var x\t".into()).unwrap().1);
     }
 
     #[test]
