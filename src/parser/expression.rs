@@ -31,11 +31,9 @@ pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, _) = tag("this")(s)?;
-    let (s, end) = position(s)?;
-    let (s, _) = sp0(s)?;
-    Ok((s, NodeKind::ThisExpression.with_pos(start, end)))
+    map(spanned(ws0(tag("this"))), |(_, start, end)| {
+        NodeKind::ThisExpression.with_pos(start, end)
+    })(s)
 }
 
 pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {

@@ -4,7 +4,6 @@ use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
 use nom::{branch::alt, bytes::complete::*, combinator::*, number::complete::*, IResult};
-use nom_locate::position;
 
 pub fn parse_literal(s: Span) -> IResult<Span, Node> {
     ws0(alt((null_lit, bool_lit, numeric_lit, array_lit)))(s)
@@ -12,37 +11,34 @@ pub fn parse_literal(s: Span) -> IResult<Span, Node> {
 }
 
 pub fn null_lit(s: Span) -> IResult<Span, Node> {
-    let (s, start) = position(s)?;
-    let (s, _) = tag("null")(s)?;
-    let (s, end) = position(s)?;
-    Ok((s, LiteralValue::Null.into_node_kind().with_pos(start, end)))
+    map(spanned(tag("null")), |(_, start, end)| {
+        LiteralValue::Null.into_node_kind().with_pos(start, end)
+    })(s)
 }
 
 pub fn bool_lit(s: Span) -> IResult<Span, Node> {
-    let (s, start) = position(s)?;
-    let (s, val) = alt((
-        value(false, pair(tag("false"), not(identifier_continue))),
-        value(true, pair(tag("true"), not(identifier_continue))),
-    ))(s)?;
-    let (s, end) = position(s)?;
-    Ok((
-        s,
-        LiteralValue::Boolean(val)
-            .into_node_kind()
-            .with_pos(start, end),
-    ))
+    map(
+        spanned(alt((
+            value(false, pair(tag("false"), not(identifier_continue))),
+            value(true, pair(tag("true"), not(identifier_continue))),
+        ))),
+        |(val, start, end)| {
+            LiteralValue::Boolean(val)
+                .into_node_kind()
+                .with_pos(start, end)
+        },
+    )(s)
 }
 
 pub fn numeric_lit(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, num) = alt((octal_int_lit, hex_int_lit, decimal_lit))(s)?;
-    let (s, end) = position(s)?;
-    Ok((
-        s,
-        LiteralValue::Number(num)
-            .into_node_kind()
-            .with_pos(start, end),
-    ))
+    map(
+        spanned(alt((octal_int_lit, hex_int_lit, decimal_lit))),
+        |(num, start, end)| {
+            LiteralValue::Number(num)
+                .into_node_kind()
+                .with_pos(start, end)
+        },
+    )(s)
 }
 
 fn decimal_lit(s: Span) -> ParseResult<f64> {
@@ -50,33 +46,32 @@ fn decimal_lit(s: Span) -> ParseResult<f64> {
 }
 
 fn octal_int_lit(s: Span) -> ParseResult<f64> {
-    let (s, octal_str) = preceded(char('0'), oct_digit1)(s)?;
-    Ok((
-        s,
-        i64::from_str_radix(octal_str.fragment(), 8).unwrap() as f64,
-    ))
+    map(preceded(char('0'), oct_digit1), |octal_str: Span| {
+        i64::from_str_radix(octal_str.fragment(), 8).unwrap() as f64
+    })(s)
 }
 
 fn hex_int_lit(s: Span) -> ParseResult<f64> {
-    let (s, hex_str) = preceded(alt((tag("0x"), tag("0X"))), hex_digit1)(s)?;
-    Ok((
-        s,
-        i64::from_str_radix(hex_str.fragment(), 16).unwrap() as f64,
-    ))
+    map(
+        preceded(alt((tag("0x"), tag("0X"))), hex_digit1),
+        |hex_str: Span| i64::from_str_radix(hex_str.fragment(), 16).unwrap() as f64,
+    )(s)
 }
 
 pub fn array_lit(s: Span) -> IResult<Span, Node> {
-    let (s, start) = position(s)?;
-    let (s, expr_list) = delimited(ws0(char('[')), parse_expr_list_with_opt_expr, char(']'))(s)?;
-    let (s, end) = position(s)?;
-    sp0(s)?;
-    Ok((
-        s,
-        NodeKind::ArrayExpression {
-            elements: expr_list,
-        }
-        .with_pos(start, end),
-    ))
+    map(
+        spanned(delimited(
+            ws0(char('[')),
+            parse_expr_list_with_opt_expr,
+            ws0(char(']')),
+        )),
+        |(expr_list, start, end)| {
+            NodeKind::ArrayExpression {
+                elements: expr_list,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
 }
 
 #[cfg(test)]

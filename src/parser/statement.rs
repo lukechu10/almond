@@ -11,11 +11,10 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_block(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, body) = delimited(ws0(tag("{")), parse_stmt_list, tag("}"))(s)?;
-    let (s, end) = ws0(position)(s)?;
-
-    Ok((s, NodeKind::BlockStatement { body }.with_pos(start, end)))
+    map(
+        spanned(delimited(ws0(tag("{")), parse_stmt_list, tag("}"))),
+        |(body, start, end)| NodeKind::BlockStatement { body }.with_pos(start, end),
+    )(s)
 }
 
 pub fn parse_stmt_list(s: Span) -> ParseResult<Vec<Node>> {
@@ -44,7 +43,6 @@ pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
         opt(semi),
     ))(s)?;
 
-    // let (s, end) = ws0(position)(s)?;
     Ok((
         s,
         NodeKind::VariableDeclaration {
