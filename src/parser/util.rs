@@ -113,6 +113,12 @@ where
     }
 }
 
+/// A semicolon is "automatically inserted" if a newline or the end of the input stream is reached, or the offending token is `"}"`.
+/// See https://es5.github.io/#x7.9 for more information.
+pub fn semi(s: Span) -> ParseResult<()> {
+    value((), tag(";"))(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

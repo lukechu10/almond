@@ -436,7 +436,7 @@ pub enum NodeKind<'a> {
         /// `type: Pattern`
         id: Box<Node<'a>>,
         /// `type: Expression | null`
-        init: Option<Box<Node<'a>>>,
+        init: Box<Option<Node<'a>>>,
     },
     /*
     Expressions

@@ -7,12 +7,14 @@ mod identifier;
 mod keyword;
 mod literal;
 mod precedence;
+mod statement;
 mod util;
 pub use expression::*;
 pub use identifier::*;
 pub use keyword::*;
 pub use literal::*;
 pub use precedence::*;
+pub use statement::*;
 pub use util::*;
 
 use nom::{character::complete::*, multi::*, sequence::*, IResult};
