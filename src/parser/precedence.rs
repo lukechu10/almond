@@ -186,7 +186,8 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
             tag("%"),
         ),
         // Member Access
-        value((InfixOperator::DotOperator, BindingPower(39, 40)), tag(".")),
+        // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
+        value((InfixOperator::DotOperator, BindingPower(41, 42)), tag(".")),
         // TODO
     )))(s)
 }
@@ -195,6 +196,8 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
 pub enum PrefixOperator {
     Unary(UnaryOperator),
     Update(UpdateOperator),
+    /// Eats `new` (does not eat identifier or argument list).
+    New,
 }
 impl From<UnaryOperator> for PrefixOperator {
     fn from(op: UnaryOperator) -> Self {
@@ -258,6 +261,8 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
             (UnaryOperator::Delete.into(), BindingPower(-1, 33)),
             keyword_delete,
         ),
+        // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
+        value((PrefixOperator::New, BindingPower(-1, 41)), keyword_new),
     )))(s)
 }
 
@@ -290,7 +295,7 @@ impl From<UpdateOperator> for PostfixOperator {
 /// * Postfix Increment - Postfix Increment has a precedence of 18 and is postfix. **Binding power**: `(35, -1)`.
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
-pub fn postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower, Span)> {
+pub fn parse_postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower, Span)> {
     let (s, (postfix_op, bp)) = alt((
         value(
             (UpdateOperator::Increment.into(), BindingPower(35, -1)),
@@ -304,10 +309,7 @@ pub fn postfix_operator(s: Span) -> ParseResult<(PostfixOperator, BindingPower, 
             (PostfixOperator::ComputedMember, BindingPower(39, -1)),
             tag("["),
         ),
-        value(
-            (PostfixOperator::FuncCall, BindingPower(39, -1)),
-            tag("("),
-        ),
+        value((PostfixOperator::FuncCall, BindingPower(39, -1)), tag("(")),
     ))(s)?;
     let (s, end) = position(s)?;
     let (s, _) = sp0(s)?;

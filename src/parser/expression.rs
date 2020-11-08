@@ -59,81 +59,13 @@ pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
     )(s)
 }
 
-fn parse_computed_member_expr(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, (object, property)) = tuple((
-        parse_member_expr,
-        delimited(ws0(char('[')), parse_expr, char(']')),
-    ))(s)?;
-    let (s, end): (Span, Span) = position(s)?;
-    let (s, _) = sp0(s)?;
-    Ok((
-        s,
-        NodeKind::MemberExpression {
-            computed: true,
-            property: Box::new(property),
-            object: Box::new(object),
-        }
-        .with_pos(start, end),
-    ))
-}
-
-fn parse_prop_member_expr(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, (object, property)) = tuple((
-        parse_member_expr,
-        preceded(ws0(char('.')), parse_identifier),
-    ))(s)?;
-    let (s, end): (Span, Span) = position(s)?;
-    let (s, _) = sp0(s)?;
-    Ok((
-        s,
-        NodeKind::MemberExpression {
-            computed: false,
-            property: Box::new(property),
-            object: Box::new(object),
-        }
-        .with_pos(start, end),
-    ))
-}
-
-fn parse_new_expr(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, (callee, arguments)) = preceded(
-        ws1(keyword_new),
-        pair(
-            parse_member_expr,
-            delimited(ws0(char('(')), parse_expr_list, char(')')),
-        ),
-    )(s)?;
-    let (s, end) = position(s)?;
-    let (s, _) = sp0(s)?;
-    Ok((
-        s,
-        NodeKind::NewExpression {
-            callee: Box::new(callee),
-            arguments,
-        }
-        .with_pos(start, end),
-    ))
-}
-
-pub fn parse_member_expr(s: Span) -> ParseResult<Node> {
-    alt((
-        // terminated(parse_primary_expr, not(alt((char('.'), char('['))))),
-        parse_prop_member_expr,     // '.'
-        parse_computed_member_expr, // '['
-        parse_new_expr,             // new
-        parse_primary_expr,
-    ))(s)
-}
-
 /// Pratt parsing for prefix operators. Called in `parse_expr_bp`.
 fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, (prefix_op, BindingPower(_, right_bp))) = parse_prefix_operator(s)?;
     let (s, rhs) = parse_expr_bp(s, right_bp)?;
-    let (s, end) = position(s)?;
+
+    let (mut s, mut end) = position(s)?;
 
     let node_kind = match prefix_op {
         PrefixOperator::Unary(prefix_op) => NodeKind::UnaryExpression {
@@ -146,6 +78,21 @@ fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
             operator: prefix_op,
             prefix: true,
         },
+        PrefixOperator::New => {
+            let (s_tmp, arguments) = opt(delimited(ws0(char('(')), parse_expr_list, char(')')))(s)?;
+            s = s_tmp;
+            let (s_tmp, end_tmp) = position(s)?;
+            s = s_tmp;
+            end = end_tmp;
+
+            let (s_tmp, _) = sp0(s)?;
+            s = s_tmp;
+
+            NodeKind::NewExpression {
+                callee: Box::new(rhs),
+                arguments: arguments.unwrap_or(Vec::new()),
+            }
+        }
     };
     Ok((s, node_kind.with_pos(start, end)))
 }
@@ -156,7 +103,9 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
     let (mut s, mut lhs) = alt((parse_prefix_expr, parse_primary_expr))(s)?;
 
     loop {
-        if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _), mut end))) = postfix_operator(s) {
+        if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _), mut end))) =
+            parse_postfix_operator(s)
+        {
             if left_bp < min_bp {
                 break;
             }
@@ -292,13 +241,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_new_expr() {
-        assert_json_snapshot!(parse_member_expr("new Array()".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("new Array(1)".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("new Array(1,)".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("new Array(1,2)".into()).unwrap().1);
-        assert_json_snapshot!(parse_member_expr("new Foo.Bar(true)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("new Array()".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("new Array".into()).unwrap().1); // paren optional
+        assert_json_snapshot!(parse_expr("new Array(1)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("new Array(1,)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("new Array(1,2)".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("new Foo.Bar(true)".into()).unwrap().1);
     }
 
     #[test]
