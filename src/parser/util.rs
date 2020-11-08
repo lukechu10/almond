@@ -1,7 +1,8 @@
-//! Utilities
+//! Utilities.
 
 use crate::parser::*;
-use nom::{branch::*, bytes::complete::*, combinator::*, IResult, Parser};
+use nom::{branch::*, bytes::complete::*, combinator::*, IResult, Offset, Parser, Slice};
+use nom_locate::position;
 
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 pub type ParseResult<'a, T> = IResult<Span<'a>, T>;
@@ -96,9 +97,9 @@ pub fn ws0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
     F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
 {
-    move |input: Span<'a>| {
-        let (input, o1) = f.parse(input)?;
-        sp0.parse(input).map(|(i, _)| (i, o1))
+    move |s: Span<'a>| {
+        let (s, o1) = f.parse(s)?;
+        sp0.parse(s).map(|(i, _)| (i, o1))
     }
 }
 
@@ -107,9 +108,46 @@ pub fn ws1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
     F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
 {
-    move |input: Span<'a>| {
-        let (input, o1) = f.parse(input)?;
-        sp1.parse(input).map(|(i, _)| (i, o1))
+    move |s: Span<'a>| {
+        let (s, o1) = f.parse(s)?;
+        sp1.parse(s).map(|(i, _)| (i, o1))
+    }
+}
+
+/// Applies a parser and records end position. Ignores whitespace by trimming the end of the matched str.
+pub fn spanned_end<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<(O1, Span)>
+where
+    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+{
+    move |s: Span<'a>| {
+        let (matched_s, o1) = f.parse(s)?;
+        let index = s.offset(&matched_s);
+        let slice = s.slice(..index).trim_end();
+        let (_, end) = preceded(take(slice.len()), position)(s)?;
+
+        Ok((matched_s, (o1, position(end)?.1)))
+    }
+}
+
+/// Applies a parser and records start and end position. Ignores whitespace by trimming the end of the matched str.
+pub fn spanned<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<(O1, Span, Span)>
+where
+    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+{
+    move |s: Span<'a>| {
+        let (matched_s, o1) = f.parse(s)?;
+        let index = s.offset(&matched_s);
+        let slice = s.slice(..index).trim_end();
+        let (_, end) = preceded(take(slice.len()), position)(s)?;
+
+        Ok((
+            matched_s,
+            (
+                o1,
+                /* start */ position(s)?.1,
+                /* end */ position(end)?.1,
+            ),
+        ))
     }
 }
 

@@ -15,7 +15,7 @@ pub use keyword::*;
 pub use literal::*;
 pub use precedence::*;
 pub use statement::*;
-pub use util::*;
+pub(crate) use util::*;
 
 use nom::{character::complete::*, multi::*, sequence::*, IResult};
 

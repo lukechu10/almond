@@ -23,13 +23,9 @@ pub fn parse_stmt_list(s: Span) -> ParseResult<Vec<Node>> {
 }
 
 pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
-    let initializer = preceded(ws0(tag("=")), expr_no_seq);
+    let initializer = preceded(ws0(tag("=")), parse_expr_no_seq);
     let var_declaration = map(
-        tuple((
-            position,
-            pair(parse_identifier, opt(initializer)),
-            position,
-        )),
+        tuple((position, pair(parse_identifier, opt(initializer)), position)),
         |(start, (id, init), end)| {
             NodeKind::VariableDeclarator {
                 id: Box::new(id),
@@ -38,15 +34,17 @@ pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
             .with_pos(start, end)
         },
     );
-    let mut parse_declaration_list = separated_list1(ws0(tag(",")), ws0(var_declaration));
+    let parse_declaration_list = separated_list1(ws0(tag(",")), ws0(var_declaration));
 
     let (s, start) = position(s)?;
-    let (s, _) = ws1(keyword_var)(s)?;
 
-    let (s, declarations) = parse_declaration_list(s)?;
+    let (s, (declarations, end)) = spanned_end(delimited(
+        ws1(keyword_var),
+        parse_declaration_list,
+        opt(semi),
+    ))(s)?;
 
-    let (s, _) = opt(semi)(s)?;
-    let (s, end) = ws0(position)(s)?;
+    // let (s, end) = ws0(position)(s)?;
     Ok((
         s,
         NodeKind::VariableDeclaration {
@@ -58,10 +56,9 @@ pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
-    let (s, start) = position(s)?;
-    let (s, _) = tag(";")(s)?;
-    let (s, end) = position(s)?;
-    Ok((s, NodeKind::EmptyStatement.with_pos(start, end)))
+    map(spanned(tag(";")), |(_, start, end)| {
+        NodeKind::EmptyStatement.with_pos(start, end)
+    })(s)
 }
 
 #[cfg(test)]
@@ -80,9 +77,7 @@ mod tests {
 
     #[test]
     fn test_empty_stmt() {
-        assert_eq!(
-            parse_empty_stmt(";".into()).unwrap().1.kind,
-            NodeKind::EmptyStatement
-        );
+        assert_json_snapshot!(parse_stmt(";".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt(";\t".into()).unwrap().1);
     }
 }

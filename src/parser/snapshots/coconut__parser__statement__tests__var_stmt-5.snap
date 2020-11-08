@@ -20,5 +20,5 @@ expression: "parse_stmt(\"var x\\t\".into()).unwrap().1"
   ],
   "kind": "var",
   "start": 0,
-  "end": 6
+  "end": 5
 }

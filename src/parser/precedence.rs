@@ -214,15 +214,24 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
         // Bitwise shift
         alt((
             value(
-                (BinaryOperator::ZeroFillLeftShift.into(), BindingPower(25, 26)),
+                (
+                    BinaryOperator::ZeroFillLeftShift.into(),
+                    BindingPower(25, 26),
+                ),
                 tag("<<"),
             ),
             value(
-                (BinaryOperator::SignedRightShift.into(), BindingPower(25, 26)),
+                (
+                    BinaryOperator::SignedRightShift.into(),
+                    BindingPower(25, 26),
+                ),
                 tag(">>"),
             ),
             value(
-                (BinaryOperator::ZeroFillRightShift.into(), BindingPower(25, 26)),
+                (
+                    BinaryOperator::ZeroFillRightShift.into(),
+                    BindingPower(25, 26),
+                ),
                 tag(">>>"),
             ),
         )),
