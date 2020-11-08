@@ -267,6 +267,8 @@ mod tests {
         assert_json_snapshot!(parse_expr("1 + 2 * 3".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 * 2 + 3 * 4".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("(1 + 2) * 3".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("true && false".into()).unwrap().1);
     }
 
     #[test]
@@ -276,6 +278,8 @@ mod tests {
         assert_json_snapshot!(parse_expr("+(+1)".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-1)
         assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("typeof x".into()).unwrap().1);
     }
 
     #[test]

@@ -1,0 +1,22 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"true && false\".into()).unwrap().1"
+---
+{
+  "type": "LogicalExpression",
+  "operator": "&&",
+  "left": {
+    "type": "Literal",
+    "value": true,
+    "start": 0,
+    "end": 4
+  },
+  "right": {
+    "type": "Literal",
+    "value": false,
+    "start": 8,
+    "end": 13
+  },
+  "start": 0,
+  "end": 13
+}
