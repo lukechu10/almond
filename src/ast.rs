@@ -528,9 +528,9 @@ pub enum NodeKind<'a> {
         /// `type: Expression`
         test: Box<Node<'a>>,
         /// `type: Expression`
-        alternate: Box<Node<'a>>,
-        /// `type: Expression`
         consequent: Box<Node<'a>>,
+        /// `type: Expression`
+        alternate: Box<Node<'a>>,
     },
     /// A function or method call expression.
     CallExpression {

@@ -3,7 +3,7 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*, IResult};
+use nom::{branch::alt, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 /// Alias for `parse_expr_bp(s, 0)`.
@@ -39,7 +39,7 @@ pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
-    delimited(ws0(char('(')), parse_expr_no_seq, ws0(char(')')))(s)
+    delimited(ws0(char('(')), parse_expr, ws0(char(')')))(s)
 }
 
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
@@ -59,7 +59,7 @@ pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> 
 
 pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
     terminated(
-        separated_list0(ws0(char(',')), parse_expr),
+        separated_list0(ws0(char(',')), parse_expr_no_seq),
         // eat trailing comma
         ws0(opt(char(','))),
     )(s)
@@ -179,6 +179,29 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
         // ok, now we can override s
         s = s_tmp;
 
+        if let InfixOperator::TernaryOperator = op {
+            let (s_tmp, mhs) = parse_expr(s)?;
+            s = s_tmp;
+
+            let (s_tmp, _) = ws0(tag(":"))(s)?;
+            s = s_tmp;
+
+            let (s_tmp, rhs) = parse_expr(s)?;
+            s = s_tmp;
+
+            let start = lhs.clone().start;
+            let end = rhs.clone().end;
+
+            let node_kind = NodeKind::ConditionalExpression {
+                test: Box::new(lhs),
+                consequent: Box::new(mhs),
+                alternate: Box::new(rhs),
+            };
+
+            lhs = node_kind.with_pos(start, end);
+            continue;
+        }
+
         let (s_tmp, rhs) = parse_expr_bp(s, right_bp)?;
         s = s_tmp;
 
@@ -206,6 +229,17 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
                 property: Box::new(rhs),
                 computed: false,
             },
+            InfixOperator::SequenceOperator => NodeKind::SequenceExpression {
+                expressions: match &lhs.kind {
+                    NodeKind::SequenceExpression { expressions } => {
+                        let mut expressions = expressions.clone();
+                        expressions.push(rhs);
+                        expressions
+                    }
+                    _ => vec![lhs, rhs],
+                },
+            },
+            InfixOperator::TernaryOperator => unreachable!("handled earlier"),
         };
         lhs = node_kind.with_pos(start, end);
     }
@@ -263,6 +297,18 @@ mod tests {
         assert_json_snapshot!(parse_expr("foo.bar.baz()".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("foo.bar(baz)".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("foo.bar(baz, 1, 2, 3)".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_sequence_expr() {
+        assert_json_snapshot!(parse_expr("1,2,3".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("(1,2,3)".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_ternary_expr() {
+        assert_json_snapshot!(parse_expr("true ? x : y".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("a ? x : b ? y : z".into()).unwrap().1); // should be parsed as a ? x : (b ? y : z)
     }
 
     #[test]

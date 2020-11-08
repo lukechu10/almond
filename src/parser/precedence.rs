@@ -19,6 +19,8 @@ pub enum InfixOperator {
     DotOperator,
     /// Should be transformed into a `SequenceExpression`.
     SequenceOperator,
+    /// Eats `?`.
+    TernaryOperator,
 }
 impl From<BinaryOperator> for InfixOperator {
     fn from(op: BinaryOperator) -> Self {
@@ -129,6 +131,11 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
                 tag("|="),
             ),
         )),
+        // Ternary operator
+        value(
+            (InfixOperator::TernaryOperator, BindingPower(7, 8)),
+            tag("?"),
+        ),
         // Logical
         alt((
             value(
@@ -207,15 +214,15 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
         // Bitwise shift
         alt((
             value(
-                (BinaryOperator::ZeroFillLeftShift, BindingPower(25, 26)),
+                (BinaryOperator::ZeroFillLeftShift.into(), BindingPower(25, 26)),
                 tag("<<"),
             ),
             value(
-                (BinaryOperator::SignedRightShift, BindingPower(25, 26)),
+                (BinaryOperator::SignedRightShift.into(), BindingPower(25, 26)),
                 tag(">>"),
             ),
             value(
-                (BinaryOperator::ZeroFillRightShift, BindingPower(25, 26)),
+                (BinaryOperator::ZeroFillRightShift.into(), BindingPower(25, 26)),
                 tag(">>>"),
             ),
         )),
