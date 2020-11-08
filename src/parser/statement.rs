@@ -7,7 +7,7 @@ use nom::{branch::alt, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 pub fn parse_stmt(s: Span) -> ParseResult<Node> {
-    alt((parse_block, parse_var_stmt, parse_empty_stmt))(s)
+    alt((parse_block, parse_var_stmt, parse_empty_stmt, parse_expr_stmt))(s)
 }
 
 pub fn parse_block(s: Span) -> ParseResult<Node> {
@@ -59,6 +59,18 @@ pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
     })(s)
 }
 
+pub fn parse_expr_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(terminated(parse_expr, opt(semi))),
+        |(expr, start, end)| {
+            NodeKind::ExpressionStatement {
+                expression: Box::new(expr),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -77,5 +89,11 @@ mod tests {
     fn test_empty_stmt() {
         assert_json_snapshot!(parse_stmt(";".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt(";\t".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_expr_stmt() {
+        assert_json_snapshot!(parse_stmt("x + y;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("x + y\n".into()).unwrap().1);
     }
 }
