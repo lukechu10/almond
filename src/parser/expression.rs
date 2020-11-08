@@ -7,8 +7,14 @@ use nom::{branch::alt, bytes::complete::*, combinator::*, IResult};
 use nom_locate::position;
 
 /// Alias for `parse_expr_bp(s, 0)`.
-pub fn parse_expr(s: Span) -> IResult<Span, Node> {
+pub fn parse_expr(s: Span) -> ParseResult<Node> {
     parse_expr_bp(s, 0)
+}
+
+/// Alias for `parse_expr_bp(s, 1)`. Should be used when parsing expressions in expression lists.
+/// This prevents matching the sequence (`,`) operator.
+pub fn parse_expr_no_seq(s: Span) -> ParseResult<Node> {
+    parse_expr_bp(s, 1)
 }
 
 /// Parse an atomic expression — either a single token that is an
@@ -33,13 +39,13 @@ pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
-    delimited(ws0(char('(')), parse_expr, ws0(char(')')))(s)
+    delimited(ws0(char('(')), parse_expr_no_seq, ws0(char(')')))(s)
 }
 
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
     alt((
         value(None, peek(char(','))),
-        map(parse_expr, |expr| Some(expr)),
+        map(parse_expr_no_seq, |expr| Some(expr)),
     ))(s)
 }
 
