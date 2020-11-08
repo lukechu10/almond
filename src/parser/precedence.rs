@@ -17,6 +17,8 @@ pub enum InfixOperator {
     Assignment(AssignmentOperator),
     /// Should be transformed into a `MemberExpression` with `computed = false`.
     DotOperator,
+    /// Should be transformed into a `SequenceExpression`.
+    SequenceOperator,
 }
 impl From<BinaryOperator> for InfixOperator {
     fn from(op: BinaryOperator) -> Self {
@@ -50,6 +52,11 @@ impl From<AssignmentOperator> for InfixOperator {
 /// Returns `Err` if cannot parse a valid binary operator.
 pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower)> {
     ws0(alt((
+        // Comma / Sequence
+        value(
+            (InfixOperator::SequenceOperator, BindingPower(0, 1)),
+            tag(","),
+        ),
         // Assignment
         alt((
             value(
@@ -134,57 +141,110 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
             ),
         )),
         // Bitwise
-        value(
-            (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
-            tag("|"),
-        ),
-        value(
-            (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
-            tag("^"),
-        ),
-        value(
-            (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
-            tag("&"),
-        ),
+        alt((
+            value(
+                (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
+                tag("|"),
+            ),
+            value(
+                (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
+                tag("^"),
+            ),
+            value(
+                (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
+                tag("&"),
+            ),
+        )),
         // Equality
-        value(
-            (BinaryOperator::EqualsEquals.into(), BindingPower(18, 20)),
-            tag("=="),
-        ),
-        value(
-            (BinaryOperator::NotEquals.into(), BindingPower(18, 20)),
-            tag("!="),
-        ),
-        value(
-            (BinaryOperator::TripleEquals.into(), BindingPower(18, 20)),
-            tag("==="),
-        ),
-        value(
-            (BinaryOperator::TripleNotEquals.into(), BindingPower(18, 20)),
-            tag("!=="),
-        ),
+        alt((
+            value(
+                (BinaryOperator::EqualsEquals.into(), BindingPower(18, 20)),
+                tag("=="),
+            ),
+            value(
+                (BinaryOperator::NotEquals.into(), BindingPower(18, 20)),
+                tag("!="),
+            ),
+            value(
+                (BinaryOperator::TripleEquals.into(), BindingPower(18, 20)),
+                tag("==="),
+            ),
+            value(
+                (BinaryOperator::TripleNotEquals.into(), BindingPower(18, 20)),
+                tag("!=="),
+            ),
+        )),
+        // Relational
+        alt((
+            value(
+                (BinaryOperator::Instanceof.into(), BindingPower(23, 24)),
+                keyword_instanceof,
+            ),
+            value(
+                (BinaryOperator::In.into(), BindingPower(23, 24)),
+                keyword_in,
+            ),
+            value(
+                (BinaryOperator::LessThan.into(), BindingPower(23, 24)),
+                tag("<"),
+            ),
+            value(
+                (BinaryOperator::LessThanEquals.into(), BindingPower(23, 24)),
+                tag("<="),
+            ),
+            value(
+                (BinaryOperator::GreaterThan.into(), BindingPower(23, 24)),
+                tag(">"),
+            ),
+            value(
+                (
+                    BinaryOperator::GreaterThanEquals.into(),
+                    BindingPower(23, 24),
+                ),
+                tag(">="),
+            ),
+        )),
+        // Bitwise shift
+        alt((
+            value(
+                (BinaryOperator::ZeroFillLeftShift, BindingPower(25, 26)),
+                tag("<<"),
+            ),
+            value(
+                (BinaryOperator::SignedRightShift, BindingPower(25, 26)),
+                tag(">>"),
+            ),
+            value(
+                (BinaryOperator::ZeroFillRightShift, BindingPower(25, 26)),
+                tag(">>>"),
+            ),
+        )),
         // Additive
-        value(
-            (BinaryOperator::Plus.into(), BindingPower(27, 28)),
-            tag("+"),
-        ),
-        value(
-            (BinaryOperator::Minus.into(), BindingPower(27, 28)),
-            tag("-"),
-        ),
+        alt((
+            value(
+                (BinaryOperator::Plus.into(), BindingPower(27, 28)),
+                tag("+"),
+            ),
+            value(
+                (BinaryOperator::Minus.into(), BindingPower(27, 28)),
+                tag("-"),
+            ),
+        )),
         // Multiplicative
-        value(
-            (BinaryOperator::Asterisk.into(), BindingPower(29, 30)),
-            tag("*"),
-        ),
-        value(
-            (BinaryOperator::Slash.into(), BindingPower(29, 30)),
-            tag("/"),
-        ),
-        value(
-            (BinaryOperator::Percent.into(), BindingPower(29, 30)),
-            tag("%"),
-        ),
+        alt((
+            value(
+                (BinaryOperator::Asterisk.into(), BindingPower(29, 30)),
+                tag("*"),
+            ),
+            value(
+                (BinaryOperator::Slash.into(), BindingPower(29, 30)),
+                tag("/"),
+            ),
+            value(
+                (BinaryOperator::Percent.into(), BindingPower(29, 30)),
+                tag("%"),
+            ),
+        )),
         // Member Access
         // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
         value((InfixOperator::DotOperator, BindingPower(41, 42)), tag(".")),
