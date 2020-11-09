@@ -337,7 +337,7 @@ pub enum NodeKind<'a> {
         /// `type: Statement`
         consequent: Box<Node<'a>>,
         /// `type: Statement | null`
-        alternate: Option<Box<Node<'a>>>,
+        alternate: Box<Option<Node<'a>>>,
     },
     /// A `switch` statement.
     SwitchStatement {

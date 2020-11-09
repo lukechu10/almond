@@ -1,0 +1,27 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"if (x) 1;\".into()).unwrap().1"
+---
+{
+  "type": "IfStatement",
+  "test": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 4,
+    "end": 5
+  },
+  "consequent": {
+    "type": "ExpressionStatement",
+    "expression": {
+      "type": "Literal",
+      "value": 1.0,
+      "start": 7,
+      "end": 8
+    },
+    "start": 7,
+    "end": 9
+  },
+  "alternate": null,
+  "start": 0,
+  "end": 9
+}

@@ -7,12 +7,18 @@ use nom::{branch::alt, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 pub fn parse_stmt(s: Span) -> ParseResult<Node> {
-    alt((parse_block, parse_var_stmt, parse_empty_stmt, parse_expr_stmt))(s)
+    alt((
+        parse_block,
+        parse_var_stmt,
+        parse_empty_stmt,
+        parse_expr_stmt,
+        parse_if_stmt,
+    ))(s)
 }
 
 pub fn parse_block(s: Span) -> ParseResult<Node> {
     map(
-        spanned(delimited(ws0(tag("{")), parse_stmt_list, tag("}"))),
+        spanned(delimited(ws0(tag("{")), parse_stmt_list, ws0(tag("}")))),
         |(body, start, end)| NodeKind::BlockStatement { body }.with_pos(start, end),
     )(s)
 }
@@ -61,10 +67,33 @@ pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
 
 pub fn parse_expr_stmt(s: Span) -> ParseResult<Node> {
     map(
-        spanned(terminated(parse_expr, opt(semi))),
+        spanned(terminated(parse_expr, opt(ws0(semi)))),
         |(expr, start, end)| {
             NodeKind::ExpressionStatement {
                 expression: Box::new(expr),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_if_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            preceded(
+                ws0(keyword_if),
+                pair(
+                    delimited(ws0(tag("(")), parse_expr, ws0(tag(")"))),
+                    parse_stmt,
+                ),
+            ),
+            opt(preceded(ws0(keyword_else), parse_stmt)),
+        )),
+        |(((test, consequent), alternate), start, end)| {
+            NodeKind::IfStatement {
+                test: Box::new(test),
+                consequent: Box::new(consequent),
+                alternate: Box::new(alternate),
             }
             .with_pos(start, end)
         },
@@ -95,5 +124,15 @@ mod tests {
     fn test_expr_stmt() {
         assert_json_snapshot!(parse_stmt("x + y;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("x + y\n".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_if_stmt() {
+        assert_json_snapshot!(parse_stmt("if (x) { 1; }".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("if (x) 1;".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_stmt("if (x) { 1; } else { 2; }".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("if (x) 1; else 2;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("if (x) 1\nelse 2".into()).unwrap().1);
     }
 }
