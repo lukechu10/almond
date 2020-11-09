@@ -396,11 +396,11 @@ pub enum NodeKind<'a> {
     /// A `for` statement.
     ForStatement {
         /// `type: VariableDeclaration | Expression | null`
-        init: Option<Box<Node<'a>>>,
+        init: Box<Option<Node<'a>>>,
         /// `type: Expression | null`
-        test: Option<Box<Node<'a>>>,
+        test: Box<Option<Node<'a>>>,
         /// `type: Expression | null`
-        update: Option<Box<Node<'a>>>,
+        update: Box<Option<Node<'a>>>,
         /// `type: Statement`
         body: Box<Node<'a>>,
     },

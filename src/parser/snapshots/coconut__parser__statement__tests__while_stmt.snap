@@ -1,0 +1,33 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"while (x) {\n                    1;\n                }\".into()).unwrap().1"
+---
+{
+  "type": "WhileStatement",
+  "test": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 7,
+    "end": 8
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Literal",
+          "value": 1.0,
+          "start": 32,
+          "end": 33
+        },
+        "start": 32,
+        "end": 34
+      }
+    ],
+    "start": 10,
+    "end": 52
+  },
+  "start": 0,
+  "end": 52
+}

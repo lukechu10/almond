@@ -1,0 +1,33 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"do {\n                    1;\n                } while (x);\".into()).unwrap().1"
+---
+{
+  "type": "DoWhileStatement",
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Literal",
+          "value": 1.0,
+          "start": 25,
+          "end": 26
+        },
+        "start": 25,
+        "end": 27
+      }
+    ],
+    "start": 3,
+    "end": 45
+  },
+  "test": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 53,
+    "end": 54
+  },
+  "start": 0,
+  "end": 56
+}

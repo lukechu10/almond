@@ -1,0 +1,53 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"for (var elem in arr) {\n                    elem;\n                }\".into()).unwrap().1"
+---
+{
+  "type": "ForInStatement",
+  "left": {
+    "type": "VariableDeclaration",
+    "declarations": [
+      {
+        "type": "VariableDeclarator",
+        "id": {
+          "type": "Identifier",
+          "name": "elem",
+          "start": 9,
+          "end": 13
+        },
+        "init": null,
+        "start": 9,
+        "end": 14
+      }
+    ],
+    "kind": "var",
+    "start": 5,
+    "end": 13
+  },
+  "right": {
+    "type": "Identifier",
+    "name": "arr",
+    "start": 17,
+    "end": 20
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Identifier",
+          "name": "elem",
+          "start": 44,
+          "end": 48
+        },
+        "start": 44,
+        "end": 49
+      }
+    ],
+    "start": 22,
+    "end": 67
+  },
+  "start": 0,
+  "end": 67
+}

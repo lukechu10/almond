@@ -1,0 +1,23 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"for (;true;) { }\".into()).unwrap().1"
+---
+{
+  "type": "ForStatement",
+  "init": null,
+  "test": {
+    "type": "Literal",
+    "value": true,
+    "start": 6,
+    "end": 10
+  },
+  "update": null,
+  "body": {
+    "type": "BlockStatement",
+    "body": [],
+    "start": 13,
+    "end": 16
+  },
+  "start": 0,
+  "end": 16
+}

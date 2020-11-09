@@ -13,6 +13,7 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_empty_stmt,
         parse_expr_stmt,
         parse_if_stmt,
+        parse_iteration_stmt,
     ))(s)
 }
 
@@ -27,10 +28,17 @@ pub fn parse_stmt_list(s: Span) -> ParseResult<Vec<Node>> {
     many0(parse_stmt)(s)
 }
 
-pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
-    let initializer = preceded(ws0(tag("=")), parse_expr_no_seq);
-    let var_declaration = map(
-        tuple((position, pair(parse_identifier, opt(initializer)), position)),
+fn parse_initializer(s: Span) -> ParseResult<Node> {
+    preceded(ws0(tag("=")), parse_expr_no_seq)(s)
+}
+
+fn parse_var_declaration(s: Span) -> ParseResult<Node> {
+    map(
+        tuple((
+            position,
+            pair(parse_identifier, opt(parse_initializer)),
+            position,
+        )),
         |(start, (id, init), end)| {
             NodeKind::VariableDeclarator {
                 id: Box::new(id),
@@ -38,25 +46,41 @@ pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
             }
             .with_pos(start, end)
         },
-    );
-    let parse_declaration_list = separated_list1(ws0(tag(",")), ws0(var_declaration));
+    )(s)
+}
 
-    let (s, start) = position(s)?;
+fn parse_declaration_list(s: Span) -> ParseResult<Vec<Node>> {
+    separated_list1(ws0(tag(",")), ws0(parse_var_declaration))(s)
+}
 
-    let (s, (declarations, end)) = spanned_end(delimited(
-        ws1(keyword_var),
-        parse_declaration_list,
-        opt(semi),
-    ))(s)?;
+pub fn parse_var_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws1(keyword_var),
+            parse_declaration_list,
+            opt(ws0(semi)),
+        )),
+        |(declarations, start, end)| {
+            NodeKind::VariableDeclaration {
+                declarations,
+                kind: VariableDeclarationKind::Var,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
 
-    Ok((
-        s,
-        NodeKind::VariableDeclaration {
-            declarations,
-            kind: VariableDeclarationKind::Var,
-        }
-        .with_pos(start, end),
-    ))
+pub fn parse_var_stmt_no_semi(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(preceded(ws1(keyword_var), parse_declaration_list)),
+        |(declarations, start, end)| {
+            NodeKind::VariableDeclaration {
+                declarations,
+                kind: VariableDeclarationKind::Var,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
 }
 
 pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
@@ -100,6 +124,109 @@ pub fn parse_if_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_iteration_stmt(s: Span) -> ParseResult<Node> {
+    alt((
+        parse_do_while_stmt,
+        parse_while_stmt,
+        parse_for_stmt,
+        parse_for_in_stmt,
+    ))(s)
+}
+
+pub fn parse_do_while_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            preceded(ws0(keyword_do), parse_stmt),
+            delimited(
+                pair(ws0(keyword_while), ws0(tag("("))),
+                parse_expr,
+                pair(ws0(tag(")")), opt(ws0(semi))),
+            ),
+        )),
+        |((body, test), start, end)| {
+            NodeKind::DoWhileStatement {
+                body: Box::new(body),
+                test: Box::new(test),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_while_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_while), ws0(tag("("))),
+                parse_expr,
+                ws0(tag(")")),
+            ),
+            parse_stmt,
+        )),
+        |((test, body), start, end)| {
+            NodeKind::WhileStatement {
+                body: Box::new(body),
+                test: Box::new(test),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_for_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_for), ws0(tag("("))),
+                tuple((
+                    terminated(
+                        opt(alt((parse_var_stmt_no_semi, parse_expr))),
+                        ws0(tag(";")),
+                    ),
+                    terminated(opt(parse_expr), ws0(tag(";"))),
+                    opt(parse_expr),
+                )),
+                ws0(tag(")")),
+            ),
+            parse_stmt,
+        )),
+        |(((init, test, update), body), start, end)| {
+            NodeKind::ForStatement {
+                init: Box::new(init),
+                test: Box::new(test),
+                update: Box::new(update),
+                body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_for_in_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_for), ws0(tag("("))),
+                separated_pair(
+                    alt((parse_var_stmt, |s| parse_expr_bp(s, 23 /* no in */))),
+                    ws0(keyword_in),
+                    parse_expr,
+                ),
+                ws0(tag(")")),
+            ),
+            parse_stmt,
+        )),
+        |(((left, right), body), start, end)| {
+            NodeKind::ForInStatement {
+                left: Box::new(left),
+                right: Box::new(right),
+                body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -134,5 +261,62 @@ mod tests {
         assert_json_snapshot!(parse_stmt("if (x) { 1; } else { 2; }".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("if (x) 1; else 2;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("if (x) 1\nelse 2".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_do_while_stmt() {
+        assert_json_snapshot!(
+            parse_stmt(
+                "do {
+                    1;
+                } while (x);"
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_while_stmt() {
+        assert_json_snapshot!(
+            parse_stmt(
+                "while (x) {
+                    1;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_for_stmt() {
+        assert_json_snapshot!(
+            parse_stmt(
+                "for (var x = 0; x < 10; x++) {
+                    x;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(parse_stmt("for (;true;) { }".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_for_in_stmt() {
+        assert_json_snapshot!(
+            parse_stmt(
+                "for (var elem in arr) {
+                    elem;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 }

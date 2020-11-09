@@ -1,0 +1,83 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"for (var x = 0; x < 10; x++) {\n                    x;\n                }\".into()).unwrap().1"
+---
+{
+  "type": "ForStatement",
+  "init": {
+    "type": "VariableDeclaration",
+    "declarations": [
+      {
+        "type": "VariableDeclarator",
+        "id": {
+          "type": "Identifier",
+          "name": "x",
+          "start": 9,
+          "end": 10
+        },
+        "init": {
+          "type": "Literal",
+          "value": 0.0,
+          "start": 13,
+          "end": 14
+        },
+        "start": 9,
+        "end": 14
+      }
+    ],
+    "kind": "var",
+    "start": 5,
+    "end": 14
+  },
+  "test": {
+    "type": "BinaryExpression",
+    "operator": "<",
+    "left": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 16,
+      "end": 17
+    },
+    "right": {
+      "type": "Literal",
+      "value": 10.0,
+      "start": 20,
+      "end": 22
+    },
+    "start": 16,
+    "end": 22
+  },
+  "update": {
+    "type": "UpdateExpression",
+    "operator": "++",
+    "argument": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 24,
+      "end": 25
+    },
+    "prefix": false,
+    "start": 24,
+    "end": 27
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Identifier",
+          "name": "x",
+          "start": 51,
+          "end": 52
+        },
+        "start": 51,
+        "end": 53
+      }
+    ],
+    "start": 29,
+    "end": 71
+  },
+  "start": 0,
+  "end": 71
+}
