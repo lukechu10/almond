@@ -8,7 +8,8 @@ pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 pub type ParseResult<'a, T> = IResult<Span<'a>, T>;
 
 fn is_whitespace(c: &char) -> bool {
-    match c {
+    matches!(
+        c,
         '\t'
         // vertical tab
         | '\x0b'
@@ -20,9 +21,8 @@ fn is_whitespace(c: &char) -> bool {
         // byte order mark
         | '\u{feff}'
         // unicode space seperators
-        | '\u{2000}'..='\u{200a}' | '\u{3000}' => true,
-        _ => false
-    }
+        | '\u{2000}'..='\u{200a}' | '\u{3000}'
+    )
 }
 
 /// Parses one character if it is whitespace (not including newline and comments).
@@ -40,10 +40,7 @@ pub fn line_terminator(s: Span) -> ParseResult<()> {
 }
 
 pub fn is_line_terminator(c: char) -> bool {
-    match c {
-        '\n' | '\r' | '\u{2028}' | '\u{2029}' => true,
-        _ => false,
-    }
+    matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
 /// # Grammar

@@ -43,7 +43,7 @@ pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
     alt((
         value(None, peek(char(','))),
-        map(parse_expr_no_seq, |expr| Some(expr)),
+        map(parse_expr_no_seq, Some),
     ))(s)
 }
 
@@ -94,7 +94,7 @@ fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
 
             NodeKind::NewExpression {
                 callee: Box::new(rhs),
-                arguments: arguments.unwrap_or(Vec::new()),
+                arguments: arguments.unwrap_or_default(),
             }
         }
     };
