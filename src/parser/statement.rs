@@ -15,6 +15,8 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_if_stmt,
         parse_iteration_stmt,
         parse_continue_stmt,
+        parse_break_stmt,
+        parse_return_stmt,
     ))(s)
 }
 
@@ -203,23 +205,6 @@ pub fn parse_for_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
-pub fn parse_continue_stmt(s: Span) -> ParseResult<Node> {
-    map(
-        spanned(delimited(
-            ws_no_nl0(keyword_continue),
-            opt(parse_identifier),
-            // ws0 is on outside to eat space after ws_no_nl0 in continue keyword
-            ws0(opt(semi)),
-        )),
-        |(label, start, end)| {
-            NodeKind::ContinueStatement {
-                label: Box::new(label),
-            }
-            .with_pos(start, end)
-        },
-    )(s)
-}
-
 pub fn parse_for_in_stmt(s: Span) -> ParseResult<Node> {
     map(
         spanned(pair(
@@ -239,6 +224,57 @@ pub fn parse_for_in_stmt(s: Span) -> ParseResult<Node> {
                 left: Box::new(left),
                 right: Box::new(right),
                 body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_continue_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws_no_nl0(keyword_continue),
+            opt(parse_identifier),
+            // ws0 is on outside to eat space after ws_no_nl0 in continue keyword
+            ws0(opt(semi)),
+        )),
+        |(label, start, end)| {
+            NodeKind::ContinueStatement {
+                label: Box::new(label),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_break_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws_no_nl0(keyword_break),
+            opt(parse_identifier),
+            // ws0 is on outside to eat space after ws_no_nl0 in break keyword
+            ws0(opt(semi)),
+        )),
+        |(label, start, end)| {
+            NodeKind::BreakStatement {
+                label: Box::new(label),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_return_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws_no_nl0(keyword_return),
+            opt(parse_expr),
+            // ws0 is on outside to eat space after ws_no_nl0 in return keyword
+            ws0(opt(semi)),
+        )),
+        |(argument, start, end)| {
+            NodeKind::ReturnStatement {
+                argument: Box::new(argument),
             }
             .with_pos(start, end)
         },
@@ -345,5 +381,23 @@ mod tests {
         assert_json_snapshot!(parse_stmt("continue\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
         assert_json_snapshot!(parse_stmt("continue a".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("continue\t".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_break_stmt() {
+        assert_json_snapshot!(parse_stmt("break;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("break a;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("break\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
+        assert_json_snapshot!(parse_stmt("break a".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("break\t".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_return_stmt() {
+        assert_json_snapshot!(parse_stmt("return;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("return a;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("return\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
+        assert_json_snapshot!(parse_stmt("return a".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("return\t".into()).unwrap().1);
     }
 }

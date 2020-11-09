@@ -1,0 +1,10 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"return\\t\".into()).unwrap().1"
+---
+{
+  "type": "ReturnStatement",
+  "argument": null,
+  "start": 0,
+  "end": 6
+}

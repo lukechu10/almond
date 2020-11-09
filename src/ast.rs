@@ -308,7 +308,7 @@ pub enum NodeKind<'a> {
     /// A `return` statement.
     ReturnStatement {
         /// `type: Expression | null`
-        argument: Option<Box<Node<'a>>>,
+        argument: Box<Option<Node<'a>>>,
     },
     /// A labeled statement, i.e., a statement prefixed by a `break`/`continue` label.
     LabeledStatement {
@@ -320,7 +320,7 @@ pub enum NodeKind<'a> {
     /// A `break` statement.
     BreakStatement {
         /// `type: Identifier | null`
-        label: Option<Box<Node<'a>>>,
+        label: Box<Option<Node<'a>>>,
     },
     /// A `continue` statement.
     ContinueStatement {

@@ -1,0 +1,10 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"break\\na;\".into()).unwrap().1"
+---
+{
+  "type": "BreakStatement",
+  "label": null,
+  "start": 0,
+  "end": 5
+}
