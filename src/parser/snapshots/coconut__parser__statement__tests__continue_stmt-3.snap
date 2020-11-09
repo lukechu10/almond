@@ -1,0 +1,10 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"continue\\na;\".into()).unwrap().1"
+---
+{
+  "type": "ContinueStatement",
+  "label": null,
+  "start": 0,
+  "end": 8
+}

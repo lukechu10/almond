@@ -34,7 +34,7 @@ pub fn whitespace(s: Span) -> ParseResult<()> {
 /// ```ebnf
 /// lineTerminator = "\n" | "\r" | "\u2028" | "\u2029"
 /// ```
-pub fn line_terminator(s: Span) -> IResult<Span, ()> {
+pub fn line_terminator(s: Span) -> ParseResult<()> {
     let (s, _) = one_of("\n\r\u{2028}\u{2029}")(s)?;
     Ok((s, ()))
 }
@@ -50,7 +50,7 @@ pub fn is_line_terminator(c: char) -> bool {
 /// ```ebnf
 /// lineTerminatorSequence = "\n" | "\r" ~"\n" | "\u2028" | "\u2029" | "\r\n"
 /// ```
-pub fn line_terminator_sequence(s: Span) -> IResult<Span, ()> {
+pub fn line_terminator_sequence(s: Span) -> ParseResult<()> {
     fn parse_carriage_return(s: Span) -> IResult<Span, ()> {
         let (s, _) = tag("\r\n")(s)?;
         Ok((s, ()))
@@ -59,15 +59,22 @@ pub fn line_terminator_sequence(s: Span) -> IResult<Span, ()> {
     Ok((s, ()))
 }
 
-fn single_line_comment(s: Span) -> IResult<Span, Span> {
+fn single_line_comment(s: Span) -> ParseResult<Span> {
     let (s, _) = tag("//")(s)?;
     let (s, comment) = take_while(|c| !is_line_terminator(c))(s)?;
     let (s, _) = alt((value((), eof), line_terminator))(s)?;
     Ok((s, comment))
 }
 
-fn multi_line_comment(s: Span) -> IResult<Span, Span> {
+fn multi_line_comment(s: Span) -> ParseResult<Span> {
     delimited(tag("/*"), take_until("*/"), tag("*/"))(s)
+}
+
+fn multi_line_comment_no_nl(s: Span) -> ParseResult<Span> {
+    verify(
+        delimited(tag("/*"), take_until("*/"), tag("*/")),
+        |s: &Span| !s.contains(is_line_terminator),
+    )(s)
 }
 
 pub fn comment(s: Span) -> IResult<Span, ()> {
@@ -76,6 +83,10 @@ pub fn comment(s: Span) -> IResult<Span, ()> {
 
 pub fn sp(s: Span) -> ParseResult<()> {
     alt((whitespace, line_terminator, comment))(s)
+}
+
+pub fn sp_no_nl(s: Span) -> ParseResult<()> {
+    alt((whitespace, value((), multi_line_comment_no_nl)))(s)
 }
 
 pub fn sp0(s: Span) -> IResult<Span, ()> {
@@ -90,6 +101,20 @@ pub fn sp1(s: Span) -> IResult<Span, ()> {
         return Ok((s, ()));
     }
     value((), many1(sp))(s)
+}
+
+pub fn sp_no_nl0(s: Span) -> IResult<Span, ()> {
+    if eof::<Span, ()>(s).is_ok() {
+        return Ok((s, ()));
+    }
+    value((), many0(sp_no_nl))(s)
+}
+
+pub fn sp_no_nl1(s: Span) -> IResult<Span, ()> {
+    if eof::<Span, ()>(s).is_ok() {
+        return Ok((s, ()));
+    }
+    value((), many1(sp_no_nl))(s)
 }
 
 /// Alias for `terminated(f, sp0)`.
@@ -114,18 +139,25 @@ where
     }
 }
 
-/// Applies a parser and records end position. Ignores whitespace by trimming the end of the matched str.
-pub fn spanned_end<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<(O1, Span)>
+/// Alias for `terminated(f, sp_no_nl0)`.
+pub fn ws_no_nl0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
     F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
 {
     move |s: Span<'a>| {
-        let (matched_s, o1) = f.parse(s)?;
-        let index = s.offset(&matched_s);
-        let slice = s.slice(..index).trim_end();
-        let (_, end) = preceded(take(slice.len()), position)(s)?;
+        let (s, o1) = f.parse(s)?;
+        sp_no_nl0.parse(s).map(|(i, _)| (i, o1))
+    }
+}
 
-        Ok((matched_s, (o1, position(end)?.1)))
+/// Alias for `terminated(f, sp_no_nl1)`.
+pub fn ws_no_nl1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
+where
+    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+{
+    move |s: Span<'a>| {
+        let (s, o1) = f.parse(s)?;
+        sp_no_nl1.parse(s).map(|(i, _)| (i, o1))
     }
 }
 

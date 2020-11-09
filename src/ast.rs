@@ -325,7 +325,7 @@ pub enum NodeKind<'a> {
     /// A `continue` statement.
     ContinueStatement {
         /// `type: Identifier | null`
-        label: Option<Box<Node<'a>>>,
+        label: Box<Option<Node<'a>>>,
     },
     /*
     Statements / Choice

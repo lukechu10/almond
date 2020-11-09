@@ -14,6 +14,7 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_expr_stmt,
         parse_if_stmt,
         parse_iteration_stmt,
+        parse_continue_stmt,
     ))(s)
 }
 
@@ -202,6 +203,23 @@ pub fn parse_for_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_continue_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws_no_nl0(keyword_continue),
+            opt(parse_identifier),
+            // ws0 is on outside to eat space after ws_no_nl0 in continue keyword
+            ws0(opt(semi)),
+        )),
+        |(label, start, end)| {
+            NodeKind::ContinueStatement {
+                label: Box::new(label),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 pub fn parse_for_in_stmt(s: Span) -> ParseResult<Node> {
     map(
         spanned(pair(
@@ -318,5 +336,14 @@ mod tests {
             .unwrap()
             .1
         );
+    }
+
+    #[test]
+    fn test_continue_stmt() {
+        assert_json_snapshot!(parse_stmt("continue;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("continue a;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("continue\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
+        assert_json_snapshot!(parse_stmt("continue a".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("continue\t".into()).unwrap().1);
     }
 }
