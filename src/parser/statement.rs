@@ -20,6 +20,8 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_return_stmt,
         parse_with_stmt,
         parse_switch_stmt,
+        parse_throw_stmt,
+        parse_try_stmt
     ))(s)
 }
 
@@ -390,6 +392,73 @@ pub fn parse_labeled_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_try_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        verify(
+            spanned(tuple((
+                preceded(ws0(keyword_try), parse_block),
+                opt(parse_catch),
+                opt(parse_finally),
+            ))),
+            |((_, handler, finalizer), _, _)| 
+                // make sure there is at least one catch or finally (or both)
+                handler.is_some() || finalizer.is_some(),
+        ),
+        |((block, handler, finalizer), start, end)| {
+            NodeKind::TryStatement {
+                block: Box::new(block),
+                handler: Box::new(handler),
+                finalizer: Box::new(finalizer),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_throw_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(ws0(keyword_throw), parse_expr, opt(ws0(semi)))),
+        |(argument, start, end)| {
+            NodeKind::ThrowStatement {
+                argument: Box::new(argument),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_catch(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_catch), ws0(tag("("))),
+                parse_formal_param,
+                ws0(tag(")")),
+            ),
+            parse_block,
+        )),
+        |((param, body), start, end)| {
+            NodeKind::CatchClause {
+                param: Box::new(param),
+                body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_finally(s: Span) -> ParseResult<Node> {
+    preceded(ws0(keyword_finally), parse_block)(s)
+}
+
+pub fn parse_formal_param_list(s: Span) -> ParseResult<Vec<Node>> {
+    many0(parse_formal_param)(s)
+}
+
+pub fn parse_formal_param(s: Span) -> ParseResult<Node> {
+    parse_identifier(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -582,5 +651,19 @@ mod tests {
             .unwrap()
             .1
         );
+    }
+
+    #[test]
+    fn test_throw_stmt() {
+        assert_json_snapshot!(parse_stmt("throw true;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("throw 3;".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_try_stmt() {
+        assert_json_snapshot!(parse_stmt("try { something; } catch (err) {}".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("try { something; } finally {}".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("try { something; } catch (err) {} finally {}".into()).unwrap().1);
+        parse_stmt("try { something; }".into()).unwrap_err();
     }
 }

@@ -1,0 +1,50 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"try { something; } catch (err) {} finally {}\".into()).unwrap().1"
+---
+{
+  "type": "TryStatement",
+  "block": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Identifier",
+          "name": "something",
+          "start": 6,
+          "end": 15
+        },
+        "start": 6,
+        "end": 16
+      }
+    ],
+    "start": 4,
+    "end": 18
+  },
+  "handler": {
+    "type": "CatchClause",
+    "param": {
+      "type": "Identifier",
+      "name": "err",
+      "start": 26,
+      "end": 29
+    },
+    "body": {
+      "type": "BlockStatement",
+      "body": [],
+      "start": 31,
+      "end": 33
+    },
+    "start": 19,
+    "end": 33
+  },
+  "finalizer": {
+    "type": "BlockStatement",
+    "body": [],
+    "start": 42,
+    "end": 44
+  },
+  "start": 0,
+  "end": 44
+}

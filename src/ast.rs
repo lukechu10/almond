@@ -371,9 +371,9 @@ pub enum NodeKind<'a> {
         /// `type: BlockStatement`
         block: Box<Node<'a>>,
         /// `type: CatchClause | null`
-        handler: Option<Box<Node<'a>>>,
+        handler: Box<Option<Node<'a>>>,
         /// `type: BlockStatement | null`
-        finalizer: Option<Box<Node<'a>>>,
+        finalizer: Box<Option<Node<'a>>>,
     },
     CatchClause {
         /// `type: Pattern`
