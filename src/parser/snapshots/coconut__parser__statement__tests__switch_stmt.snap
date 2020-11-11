@@ -1,0 +1,47 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"switch (x) {\n                    case t:\n                        something;\n                        break;\n                }\".into()).unwrap().1"
+---
+{
+  "type": "SwitchStatement",
+  "discriminant": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 8,
+    "end": 9
+  },
+  "cases": [
+    {
+      "type": "SwitchCase",
+      "test": {
+        "type": "Identifier",
+        "name": "t",
+        "start": 38,
+        "end": 39
+      },
+      "consequent": [
+        {
+          "type": "ExpressionStatement",
+          "expression": {
+            "type": "Identifier",
+            "name": "something",
+            "start": 65,
+            "end": 74
+          },
+          "start": 65,
+          "end": 75
+        },
+        {
+          "type": "BreakStatement",
+          "label": null,
+          "start": 100,
+          "end": 106
+        }
+      ],
+      "start": 33,
+      "end": 106
+    }
+  ],
+  "start": 0,
+  "end": 124
+}

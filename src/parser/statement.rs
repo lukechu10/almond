@@ -3,7 +3,7 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*};
+use nom::{branch::*, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 pub fn parse_stmt(s: Span) -> ParseResult<Node> {
@@ -18,6 +18,7 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_break_stmt,
         parse_return_stmt,
         parse_with_stmt,
+        parse_switch_stmt,
     ))(s)
 }
 
@@ -302,6 +303,79 @@ pub fn parse_with_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_switch_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_switch), ws0(tag("("))),
+                parse_expr,
+                ws0(tag(")")),
+            ),
+            parse_case_block,
+        )),
+        |((descriminant, cases), start, end)| {
+            NodeKind::SwitchStatement {
+                discriminant: Box::new(descriminant),
+                cases,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_case_block(s: Span) -> ParseResult<Vec<Node>> {
+    delimited(
+        ws0(tag("{")),
+        map(
+            tuple((
+                many0(parse_case_clause),
+                opt(parse_default_clause),
+                many0(parse_case_clause),
+            )),
+            |(mut first, second, third)| {
+                if let Some(second) = second {
+                    first.push(second);
+                }
+                first.extend(third);
+                first
+            },
+        ),
+        ws0(tag("}")),
+    )(s)
+}
+
+pub fn parse_case_clause(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(ws0(keyword_case), parse_expr, ws0(tag(":"))),
+            many0(parse_stmt),
+        )),
+        |((test, consequent), start, end)| {
+            NodeKind::SwitchCase {
+                test: Box::new(Some(test)),
+                consequent,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn parse_default_clause(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(preceded(
+            pair(ws0(keyword_default), ws0(tag(":"))),
+            many0(parse_stmt),
+        )),
+        |(consequent, start, end)| {
+            NodeKind::SwitchCase {
+                test: Box::new(None),
+                consequent,
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -431,5 +505,51 @@ mod tests {
         );
         assert_json_snapshot!(parse_stmt("with (object) expression;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("with (object) expression".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_switch_stmt() {
+        assert_json_snapshot!(
+            parse_stmt(
+                "switch (x) {
+                    case t:
+                        something;
+                        break;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_stmt(
+                "switch (x) {
+                    case t:
+                        break;
+                    default:
+                        something;
+                        break;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_stmt(
+                "switch (x) {
+                    case t:
+                        break;
+                    default:
+                        something;
+                        break;
+                    case other:
+                        break;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 }

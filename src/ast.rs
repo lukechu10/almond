@@ -354,7 +354,7 @@ pub enum NodeKind<'a> {
     /// A `case` (if `test` is an `Expression`) or `default` (if `test === null`) clause in the body of a `switch` statement.
     SwitchCase {
         /// `type: Expression | null`
-        test: Option<Box<Node<'a>>>,
+        test: Box<Option<Node<'a>>>,
         /// `type: [ Statement ]`
         consequent: Vec<Node<'a>>,
     },
