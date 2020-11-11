@@ -1,0 +1,9 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"debugger;\".into()).unwrap().1"
+---
+{
+  "type": "DebuggerStatement",
+  "start": 0,
+  "end": 9
+}

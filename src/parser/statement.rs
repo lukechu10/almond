@@ -21,7 +21,8 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_with_stmt,
         parse_switch_stmt,
         parse_throw_stmt,
-        parse_try_stmt
+        parse_try_stmt,
+        parse_debugger_stmt,
     ))(s)
 }
 
@@ -451,6 +452,10 @@ pub fn parse_finally(s: Span) -> ParseResult<Node> {
     preceded(ws0(keyword_finally), parse_block)(s)
 }
 
+pub fn parse_debugger_stmt(s: Span) -> ParseResult<Node> {
+    map(spanned(terminated(ws0(keyword_debugger), opt(ws0(semi)))), |(_, start, end)| NodeKind::DebuggerStatement.with_pos(start, end))(s)
+}
+
 pub fn parse_formal_param_list(s: Span) -> ParseResult<Vec<Node>> {
     many0(parse_formal_param)(s)
 }
@@ -665,5 +670,11 @@ mod tests {
         assert_json_snapshot!(parse_stmt("try { something; } finally {}".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("try { something; } catch (err) {} finally {}".into()).unwrap().1);
         parse_stmt("try { something; }".into()).unwrap_err();
+    }
+
+    #[test]
+    fn test_debugger_stmt() {
+        assert_json_snapshot!(parse_stmt("debugger;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("debugger".into()).unwrap().1);
     }
 }
