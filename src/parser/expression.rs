@@ -41,10 +41,7 @@ pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
 }
 
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
-    alt((
-        value(None, peek(char(','))),
-        map(parse_expr_no_seq, Some),
-    ))(s)
+    alt((value(None, peek(char(','))), map(parse_expr_no_seq, Some)))(s)
 }
 
 pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> {
@@ -295,6 +292,12 @@ mod tests {
         assert_json_snapshot!(parse_expr("foo.bar.baz()".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("foo.bar(baz)".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("foo.bar(baz, 1, 2, 3)".into()).unwrap().1);
+
+        assert_json_snapshot!(
+            parse_expr("console.log(\"Hello World!\")".into())
+                .unwrap()
+                .1
+        );
     }
 
     #[test]
