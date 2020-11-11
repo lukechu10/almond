@@ -1,0 +1,26 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"with (object) expression;\".into()).unwrap().1"
+---
+{
+  "type": "WithStatement",
+  "object": {
+    "type": "Identifier",
+    "name": "object",
+    "start": 6,
+    "end": 12
+  },
+  "body": {
+    "type": "ExpressionStatement",
+    "expression": {
+      "type": "Identifier",
+      "name": "expression",
+      "start": 14,
+      "end": 24
+    },
+    "start": 14,
+    "end": 25
+  },
+  "start": 0,
+  "end": 25
+}

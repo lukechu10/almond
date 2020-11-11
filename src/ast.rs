@@ -301,7 +301,12 @@ pub enum NodeKind<'a> {
     /// A `debugger` statement.
     DebuggerStatement,
     /// A `with` statement.
-    WithStatement,
+    WithStatement {
+        /// `type: Expression`
+        object: Box<Node<'a>>,
+        /// `type: Statement`
+        body: Box<Node<'a>>,
+    },
     /*
     Statements / Control Flow
     */

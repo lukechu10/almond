@@ -17,6 +17,7 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_continue_stmt,
         parse_break_stmt,
         parse_return_stmt,
+        parse_with_stmt,
     ))(s)
 }
 
@@ -281,6 +282,26 @@ pub fn parse_return_stmt(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_with_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(pair(
+            delimited(
+                pair(ws0(keyword_with), ws0(tag("("))),
+                parse_expr,
+                ws0(tag(")")),
+            ),
+            parse_stmt,
+        )),
+        |((object, body), start, end)| {
+            NodeKind::WithStatement {
+                object: Box::new(object),
+                body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,5 +420,16 @@ mod tests {
         assert_json_snapshot!(parse_stmt("return\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
         assert_json_snapshot!(parse_stmt("return a".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("return\t".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_with_stmt() {
+        assert_json_snapshot!(
+            parse_stmt("with (object) { expression; }".into())
+                .unwrap()
+                .1
+        );
+        assert_json_snapshot!(parse_stmt("with (object) expression;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("with (object) expression".into()).unwrap().1);
     }
 }
