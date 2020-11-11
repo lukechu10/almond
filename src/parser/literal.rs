@@ -3,20 +3,26 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*, number::complete::*, IResult};
+use nom::{branch::alt, bytes::complete::*, combinator::*, number::complete::*};
 
-pub fn parse_literal(s: Span) -> IResult<Span, Node> {
-    ws0(alt((null_lit, bool_lit, numeric_lit, array_lit)))(s)
+pub fn parse_literal(s: Span) -> ParseResult<Node> {
+    ws0(alt((
+        null_lit,
+        bool_lit,
+        numeric_lit,
+        string_lit,
+        array_lit,
+    )))(s)
     // TODO: string_lit and object_lit
 }
 
-pub fn null_lit(s: Span) -> IResult<Span, Node> {
+pub fn null_lit(s: Span) -> ParseResult<Node> {
     map(spanned(tag("null")), |(_, start, end)| {
         LiteralValue::Null.into_node_kind().with_pos(start, end)
     })(s)
 }
 
-pub fn bool_lit(s: Span) -> IResult<Span, Node> {
+pub fn bool_lit(s: Span) -> ParseResult<Node> {
     map(
         spanned(alt((
             value(false, pair(tag("false"), not(identifier_continue))),
@@ -58,7 +64,81 @@ fn hex_int_lit(s: Span) -> ParseResult<f64> {
     )(s)
 }
 
-pub fn array_lit(s: Span) -> IResult<Span, Node> {
+/// Parses a valid character in a double quote string.
+fn character_double_quote(s: Span) -> ParseResult<char> {
+    let (input, c) = none_of("\"")(s)?;
+    if c == '\\' {
+        alt((
+            map_res(anychar, |c| {
+                Ok(match c {
+                    '"' | '\\' | '/' => c,
+                    'b' => '\x08',
+                    'f' => '\x0C',
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    _ => return Err(()),
+                })
+            }),
+            preceded(char('u'), unicode_esc_seq),
+        ))(input)
+    } else {
+        Ok((input, c))
+    }
+}
+
+/// Parses a valid character in a single quote string.
+fn character_single_quote(s: Span) -> ParseResult<char> {
+    let (input, c) = none_of("\'")(s)?;
+    if c == '\\' {
+        alt((
+            map_res(anychar, |c| {
+                Ok(match c {
+                    '\'' | '\\' | '/' => c,
+                    'b' => '\x08',
+                    'f' => '\x0C',
+                    'n' => '\n',
+                    'r' => '\r',
+                    't' => '\t',
+                    _ => return Err(()),
+                })
+            }),
+            preceded(char('u'), unicode_esc_seq),
+        ))(input)
+    } else {
+        Ok((input, c))
+    }
+}
+
+pub fn string_lit(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(alt((
+            delimited(
+                char('"'),
+                fold_many0(character_double_quote, String::new(), |mut string, c| {
+                    string.push(c);
+                    string
+                }),
+                char('"'),
+            ),
+            delimited(
+                char('\''),
+                fold_many0(character_single_quote, String::new(), |mut string, c| {
+                    string.push(c);
+                    string
+                }),
+                char('\''),
+            ),
+        ))),
+        |(string, start, end)| {
+            LiteralValue::String(string)
+                .into_node_kind()
+                .with_pos(start, end)
+        },
+    )(s)
+}
+
+pub fn array_lit(s: Span) -> ParseResult<Node> {
     map(
         spanned(delimited(
             ws0(char('[')),
@@ -119,6 +199,34 @@ mod tests {
         assert_eq!(
             numeric_lit("0x0".into()).unwrap().1.kind,
             LiteralValue::Number(0.0).into_node_kind() // hex 0
+        );
+    }
+
+    #[test]
+    fn test_string_lit() {
+        assert_eq!(
+            parse_literal(r#""my string""#.into()).unwrap().1.kind,
+            LiteralValue::String("my string".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#"'my string'"#.into()).unwrap().1.kind,
+            LiteralValue::String("my string".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#"'"quoted"'"#.into()).unwrap().1.kind,
+            LiteralValue::String("\"quoted\"".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#""'single'""#.into()).unwrap().1.kind,
+            LiteralValue::String("'single'".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#""\"""#.into()).unwrap().1.kind,
+            LiteralValue::String("\"".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#""\n""#.into()).unwrap().1.kind,
+            LiteralValue::String("\n".into()).into_node_kind()
         );
     }
 

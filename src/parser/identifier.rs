@@ -7,7 +7,7 @@ use nom::{branch::alt, bytes::complete::*, character::complete::*, combinator::*
 use nom_locate::position;
 
 /// Parses any 4 hex digits unicode escape sequence
-fn unicode_esc_seq(s: Span) -> IResult<Span, char> {
+pub fn unicode_esc_seq(s: Span) -> IResult<Span, char> {
     let (s, _) = tag("\\u")(s)?;
     let (s, hex_str) = recognize(count(one_of("1234567890abcdefABCDEF"), 4))(s)?;
     let hex_u32 = u32::from_str_radix(*hex_str, 16).unwrap(); // FIXME
