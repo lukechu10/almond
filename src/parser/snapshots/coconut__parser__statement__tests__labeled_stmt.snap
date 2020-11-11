@@ -1,0 +1,26 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"label: stmt;\".into()).unwrap().1"
+---
+{
+  "type": "LabeledStatement",
+  "label": {
+    "type": "Identifier",
+    "name": "label",
+    "start": 0,
+    "end": 5
+  },
+  "body": {
+    "type": "ExpressionStatement",
+    "expression": {
+      "type": "Identifier",
+      "name": "stmt",
+      "start": 7,
+      "end": 11
+    },
+    "start": 7,
+    "end": 12
+  },
+  "start": 0,
+  "end": 12
+}

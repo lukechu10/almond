@@ -1,0 +1,51 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"$: console.log(a);\".into()).unwrap().1"
+---
+{
+  "type": "LabeledStatement",
+  "label": {
+    "type": "Identifier",
+    "name": "$",
+    "start": 0,
+    "end": 1
+  },
+  "body": {
+    "type": "ExpressionStatement",
+    "expression": {
+      "type": "CallExpression",
+      "callee": {
+        "type": "MemberExpression",
+        "object": {
+          "type": "Identifier",
+          "name": "console",
+          "start": 3,
+          "end": 10
+        },
+        "property": {
+          "type": "Identifier",
+          "name": "log",
+          "start": 11,
+          "end": 14
+        },
+        "computed": false,
+        "start": 3,
+        "end": 14
+      },
+      "arguments": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "start": 15,
+          "end": 16
+        }
+      ],
+      "start": 3,
+      "end": 17
+    },
+    "start": 3,
+    "end": 18
+  },
+  "start": 0,
+  "end": 18
+}

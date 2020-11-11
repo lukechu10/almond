@@ -11,6 +11,7 @@ pub fn parse_stmt(s: Span) -> ParseResult<Node> {
         parse_block,
         parse_var_stmt,
         parse_empty_stmt,
+        parse_labeled_stmt, // labeled_stmt is before expr_stmt to prevent parsing label as an identifier expr_stmt
         parse_expr_stmt,
         parse_if_stmt,
         parse_iteration_stmt,
@@ -376,6 +377,19 @@ pub fn parse_default_clause(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+pub fn parse_labeled_stmt(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(separated_pair(parse_identifier, ws0(tag(":")), parse_stmt)),
+        |((label, body), start, end)| {
+            NodeKind::LabeledStatement {
+                label: Box::new(label),
+                body: Box::new(body),
+            }
+            .with_pos(start, end)
+        },
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -545,6 +559,23 @@ mod tests {
                         break;
                     case other:
                         break;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_labeled_stmt() {
+        assert_json_snapshot!(parse_stmt("label: stmt;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("label: stmt".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("$: console.log(a);".into()).unwrap().1);
+        assert_json_snapshot!(
+            parse_stmt(
+                "label: {
+                    stmt;
                 }"
                 .into()
             )
