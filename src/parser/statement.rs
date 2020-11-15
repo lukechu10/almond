@@ -104,6 +104,7 @@ pub fn parse_expr_stmt(s: Span) -> ParseResult<Node> {
         |(expr, start, end)| {
             NodeKind::ExpressionStatement {
                 expression: Box::new(expr),
+                directive: None,
             }
             .with_pos(start, end)
         },

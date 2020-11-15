@@ -31,7 +31,7 @@ pub fn identifier_continue(s: Span) -> IResult<Span, char> {
     })(s)
 }
 
-pub fn parse_identifier(s: Span) -> IResult<Span, Node> {
+pub fn parse_identifier(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, name) = verify(
         map(

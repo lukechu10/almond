@@ -29,7 +29,7 @@ impl<'a> From<LiteralValue> for NodeKind<'a> {
 #[derive(Debug, PartialEq, Clone, Serialize)]
 pub struct Function<'a> {
     /// `type: Identifier | null`
-    pub id: Option<Box<Node<'a>>>,
+    pub id: Box<Option<Node<'a>>>,
     /// `type: [ Pattern ]`
     pub params: Vec<Node<'a>>,
     /// `type: FunctionBody`
@@ -274,27 +274,31 @@ pub enum NodeKind<'a> {
     Statements
     */
     /// An expression statement, i.e., a statement consisting of a single expression.
+    ///
+    /// *or:*
+    ///
+    /// A directive from the directive prologue of a script or function.
+    /// The `directive` property is the raw string source of the directive without quotes.
+    ///
+    /// # Note
+    /// There is no separate `Directive` case in the enum because the ESTree spec describes the `Directive` node as having a `type` field of `ExpressionStatement`.
     ExpressionStatement {
         /// `type: Expression`
         expression: Box<Node<'a>>,
-    },
-    /// A directive from the directive prologue of a script or function.
-    /// The `directive` property is the raw string source of the directive without quotes.
-    Directive {
-        /// `type: Literal`
-        expression: Box<Node<'a>>,
-        /// The raw string source of the directive without quotes.
-        directive: String,
+        /// The raw string source of the directive without quotes. If not a directive, should be `None`.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        directive: Option<String>,
     },
     /// A block statement, i.e., a sequence of statements surrounded by braces.
+    ///
+    /// *or:*
+    ///
+    /// The body of a function, which is a block statement that may begin with directives.
+    /// # Note
+    /// There is no separate `FunctionBody` case in the enum because the ESTree spec describes the `FunctionBody` node as having a `type` field of `BlockStatement`.
     BlockStatement {
         /// `type: [ Statement ]`
         body: Vec<Node<'a>>,
-    },
-    /// The body of a function, which is a block statement that may begin with directives.
-    FunctionBody {
-        /// `type: [ Directive | Statement ]`
-        body: Box<Node<'a>>,
     },
     /// An empty statement, i.e., a solitary semicolon.
     EmptyStatement,
@@ -424,8 +428,6 @@ pub enum NodeKind<'a> {
     /// A function declaration.
     /// Note that unlike in the parent interface `Function`, the `id` cannot be `null`.
     FunctionDeclaration {
-        /// `type: Identifier`
-        id: Box<Node<'a>>,
         /// `type: Function`
         #[serde(flatten)]
         function: Function<'a>,

@@ -47,7 +47,7 @@ fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
 pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> {
     terminated(
         separated_list0(ws0(char(',')), parse_opt_expr_in_list),
-        // eat trailing comma
+        // trailing comma
         ws0(opt(char(','))),
     )(s)
 }
@@ -55,7 +55,7 @@ pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> 
 pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
     terminated(
         separated_list0(ws0(char(',')), parse_expr_no_seq),
-        // eat trailing comma
+        // trailing comma
         ws0(opt(char(','))),
     )(s)
 }
