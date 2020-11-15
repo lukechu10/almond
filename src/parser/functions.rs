@@ -55,9 +55,10 @@ pub fn parse_function_body(s: Span) -> ParseResult<Node> {
 
 pub fn parse_function_body_inner(s: Span) -> ParseResult<Vec<Node>> {
     let parse_directive_list = many0(parse_directive);
+    let parse_source_element_list = many0(alt((parse_declaration, parse_stmt)));
 
     map(
-        pair(parse_directive_list, parse_stmt_list),
+        pair(parse_directive_list, parse_source_element_list),
         |(mut directives, stmts)| {
             directives.extend(stmts);
             directives
@@ -150,6 +151,22 @@ mod tests {
                     a;
                     "not directive"
                     return 1
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_nested_function_declaration() {
+        assert_json_snapshot!(
+            parse_function_declaration(
+                r#"function a() {
+                    function b() {
+                        a();
+                    }
                 }"#
                 .into()
             )
