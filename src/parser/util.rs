@@ -1,7 +1,7 @@
 //! Utilities.
 
 use crate::parser::*;
-use nom::{branch::*, bytes::complete::*, combinator::*, IResult, Offset, Parser, Slice};
+use nom::{IResult, Offset, Parser, Slice};
 use nom_locate::position;
 
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
@@ -48,7 +48,7 @@ pub fn is_line_terminator(c: char) -> bool {
 /// lineTerminatorSequence = "\n" | "\r" ~"\n" | "\u2028" | "\u2029" | "\r\n"
 /// ```
 pub fn line_terminator_sequence(s: Span) -> ParseResult<()> {
-    fn parse_carriage_return(s: Span) -> IResult<Span, ()> {
+    fn parse_carriage_return(s: Span) -> ParseResult<()> {
         let (s, _) = tag("\r\n")(s)?;
         Ok((s, ()))
     }
@@ -74,7 +74,7 @@ fn multi_line_comment_no_nl(s: Span) -> ParseResult<Span> {
     )(s)
 }
 
-pub fn comment(s: Span) -> IResult<Span, ()> {
+pub fn comment(s: Span) -> ParseResult<()> {
     value((), alt((single_line_comment, multi_line_comment)))(s)
 }
 
@@ -86,28 +86,28 @@ pub fn sp_no_nl(s: Span) -> ParseResult<()> {
     alt((whitespace, value((), multi_line_comment_no_nl)))(s)
 }
 
-pub fn sp0(s: Span) -> IResult<Span, ()> {
+pub fn sp0(s: Span) -> ParseResult<()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }
     value((), many0(sp))(s)
 }
 
-pub fn sp1(s: Span) -> IResult<Span, ()> {
+pub fn sp1(s: Span) -> ParseResult<()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }
     value((), many1(sp))(s)
 }
 
-pub fn sp_no_nl0(s: Span) -> IResult<Span, ()> {
+pub fn sp_no_nl0(s: Span) -> ParseResult<()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }
     value((), many0(sp_no_nl))(s)
 }
 
-pub fn sp_no_nl1(s: Span) -> IResult<Span, ()> {
+pub fn sp_no_nl1(s: Span) -> ParseResult<()> {
     if eof::<Span, ()>(s).is_ok() {
         return Ok((s, ()));
     }

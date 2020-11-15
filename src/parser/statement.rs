@@ -3,7 +3,6 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::*, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 pub fn parse_stmt(s: Span) -> ParseResult<Node> {
@@ -322,9 +321,9 @@ pub fn parse_switch_stmt(s: Span) -> ParseResult<Node> {
             ),
             parse_case_block,
         )),
-        |((descriminant, cases), start, end)| {
+        |((discriminant, cases), start, end)| {
             NodeKind::SwitchStatement {
-                discriminant: Box::new(descriminant),
+                discriminant: Box::new(discriminant),
                 cases,
             }
             .with_pos(start, end)
@@ -459,14 +458,6 @@ pub fn parse_finally(s: Span) -> ParseResult<Node> {
 
 pub fn parse_debugger_stmt(s: Span) -> ParseResult<Node> {
     map(spanned(terminated(ws0(keyword_debugger), opt(ws0(semi)))), |(_, start, end)| NodeKind::DebuggerStatement.with_pos(start, end))(s)
-}
-
-pub fn parse_formal_param_list(s: Span) -> ParseResult<Vec<Node>> {
-    many0(parse_formal_param)(s)
-}
-
-pub fn parse_formal_param(s: Span) -> ParseResult<Node> {
-    parse_identifier(s)
 }
 
 #[cfg(test)]

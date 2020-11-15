@@ -3,11 +3,10 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, character::complete::*, combinator::*, IResult};
 use nom_locate::position;
 
 /// Parses any 4 hex digits unicode escape sequence
-pub fn unicode_esc_seq(s: Span) -> IResult<Span, char> {
+pub fn unicode_esc_seq(s: Span) -> ParseResult<char> {
     let (s, _) = tag("\\u")(s)?;
     let (s, hex_str) = recognize(count(one_of("1234567890abcdefABCDEF"), 4))(s)?;
     let hex_u32 = u32::from_str_radix(*hex_str, 16).unwrap(); // FIXME
@@ -15,7 +14,7 @@ pub fn unicode_esc_seq(s: Span) -> IResult<Span, char> {
     Ok((s, char))
 }
 
-pub fn identifier_start(s: Span) -> IResult<Span, char> {
+pub fn identifier_start(s: Span) -> ParseResult<char> {
     verify(alt((unicode_esc_seq, anychar)), |c: &char| match c {
         c if unicode_xid::UnicodeXID::is_xid_start(*c) => true,
         '$' | '_' => true,
@@ -23,7 +22,7 @@ pub fn identifier_start(s: Span) -> IResult<Span, char> {
     })(s)
 }
 
-pub fn identifier_continue(s: Span) -> IResult<Span, char> {
+pub fn identifier_continue(s: Span) -> ParseResult<char> {
     verify(alt((unicode_esc_seq, anychar)), |c: &char| match c {
         c if unicode_xid::UnicodeXID::is_xid_continue(*c) => true,
         '$' | '_' => true,

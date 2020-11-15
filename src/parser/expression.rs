@@ -3,7 +3,6 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
 /// Alias for `parse_expr_bp(s, 0)`.

@@ -19,8 +19,7 @@ pub use precedence::*;
 pub use statement::*;
 pub(crate) use util::*;
 
-use nom::{character::complete::*, multi::*, sequence::*, IResult};
-
-pub fn parse_program(i: &str) -> IResult<&str, &str> {
-    nom::bytes::complete::tag("hello")(i)
-}
+pub(crate) use nom::{
+    branch::alt, bytes::complete::*, character::complete::*, combinator::*, multi::*,
+    number::complete::*, sequence::*,
+};

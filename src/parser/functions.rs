@@ -3,11 +3,15 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*};
+use nom_locate::position;
 
 /// Parses a complete JS program
-pub fn parse_program(_s: Span) -> ParseResult<Node> {
-    todo!();
+pub fn parse_program(s: Span) -> ParseResult<Node> {
+    let (s, start) = position(s)?;
+    let (s, _) = sp0(s)?; // eat all preceding whitespace
+    let (s, body) = parse_function_body_inner(s)?;
+    let (s, end) = position(s)?; // Program loc should include all trailing whitespace
+    Ok((s, NodeKind::Program { body }.with_pos(start, end)))
 }
 
 pub fn parse_declaration(s: Span) -> ParseResult<Node> {

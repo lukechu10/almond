@@ -2,9 +2,8 @@
 
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*};
 
-/// Succeeds if parsed a reserved word. Shoud be used with `not` to check if an identifier is not a reserved word.
+/// Succeeds if parsed a reserved word. Should be used with `not` to check if an identifier is not a reserved word.
 pub fn parse_reserved_word(s: Span) -> ParseResult<()> {
     alt((
         parse_keyword,

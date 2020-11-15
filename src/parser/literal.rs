@@ -3,7 +3,6 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::{branch::alt, bytes::complete::*, combinator::*, number::complete::*};
 
 pub fn parse_literal(s: Span) -> ParseResult<Node> {
     ws0(alt((
