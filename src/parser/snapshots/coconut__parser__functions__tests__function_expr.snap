@@ -1,0 +1,59 @@
+---
+source: src/parser/functions.rs
+expression: "parse_function_declaration(r#\"function a() {\n                    // anonymous function:\n                    (function () {\n                        a();\n                    })\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "FunctionDeclaration",
+  "id": {
+    "type": "Identifier",
+    "name": "a",
+    "start": 9,
+    "end": 10
+  },
+  "params": [],
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "FunctionExpression",
+          "id": null,
+          "params": [],
+          "body": {
+            "type": "BlockStatement",
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "start": 117,
+                    "end": 118
+                  },
+                  "arguments": [],
+                  "start": 117,
+                  "end": 120
+                },
+                "start": 117,
+                "end": 121
+              }
+            ],
+            "start": 91,
+            "end": 143
+          },
+          "start": 79,
+          "end": 143
+        },
+        "start": 78,
+        "end": 144
+      }
+    ],
+    "start": 13,
+    "end": 162
+  },
+  "start": 0,
+  "end": 162
+}

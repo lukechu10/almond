@@ -26,6 +26,7 @@ pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
         parse_this_expr,
         parse_identifier,
         literal::parse_literal,
+        parse_function_expr,
         parse_paren_expr,
     ))(s)
 }

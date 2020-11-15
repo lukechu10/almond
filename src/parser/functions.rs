@@ -38,8 +38,25 @@ pub fn parse_function_declaration(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
-pub fn parse_function_expr(_s: Span) -> ParseResult<Node> {
-    todo!();
+pub fn parse_function_expr(s: Span) -> ParseResult<Node> {
+    let parse_function_expr_signature = pair(
+        preceded(ws0(keyword_function), opt(parse_identifier)),
+        delimited(ws0(tag("(")), parse_formal_param_list, ws0(tag(")"))),
+    );
+
+    map(
+        spanned(pair(parse_function_expr_signature, parse_function_body)),
+        |(((id, params), body), start, end)| {
+            NodeKind::FunctionExpression {
+                function: Function {
+                    id: Box::new(id),
+                    params,
+                    body: Box::new(body),
+                },
+            }
+            .with_pos(start, end)
+        },
+    )(s)
 }
 
 pub fn parse_function_body(s: Span) -> ParseResult<Node> {
@@ -169,6 +186,60 @@ mod tests {
                     }
                 }"#
                 .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_function_expr() {
+        parse_function_declaration(
+            r#"function a() {
+                // function expressions should be wrapped up in parenthesis
+                function () {
+                    a();
+                }
+            }"#
+            .into(),
+        )
+        .unwrap_err();
+
+        assert_json_snapshot!(
+            parse_function_declaration(
+                r#"function a() {
+                    // anonymous function:
+                    (function () {
+                        a();
+                    })
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+
+        assert_json_snapshot!(
+            parse_function_declaration(
+                r#"function a() {
+                    // function expression
+                    0, function b() {}
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn parse_immediately_invoked_function_expr() {
+        assert_json_snapshot!(
+            parse_stmt(
+                r#"(function () {
+                    123; // something
+                })()"#
+                    .into()
             )
             .unwrap()
             .1

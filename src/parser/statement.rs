@@ -100,7 +100,11 @@ pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
 
 pub fn parse_expr_stmt(s: Span) -> ParseResult<Node> {
     map(
-        spanned(terminated(parse_expr, opt(ws0(semi)))),
+        spanned(preceded(
+            // ExpressionStatement cannot start with `function` keyword. Function expressions must be wrapped in parenthesis.
+            // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/function#Syntax
+            not(keyword_function), 
+            terminated(parse_expr, opt(ws0(semi))))),
         |(expr, start, end)| {
             NodeKind::ExpressionStatement {
                 expression: Box::new(expr),
