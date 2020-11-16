@@ -1,0 +1,66 @@
+---
+source: src/parser/literal.rs
+expression: "parse_literal(r#\"{ abc: 123, def: { foo: \"bar\" } }\"#.into()).unwrap().1"
+---
+{
+  "type": "ObjectExpression",
+  "properties": [
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "abc",
+        "start": 2,
+        "end": 5
+      },
+      "value": {
+        "type": "Literal",
+        "value": 123.0,
+        "start": 7,
+        "end": 10
+      },
+      "kind": "init",
+      "start": 2,
+      "end": 10
+    },
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "def",
+        "start": 12,
+        "end": 15
+      },
+      "value": {
+        "type": "ObjectExpression",
+        "properties": [
+          {
+            "type": "Property",
+            "key": {
+              "type": "Identifier",
+              "name": "foo",
+              "start": 19,
+              "end": 22
+            },
+            "value": {
+              "type": "Literal",
+              "value": "bar",
+              "start": 24,
+              "end": 29
+            },
+            "kind": "init",
+            "start": 19,
+            "end": 29
+          }
+        ],
+        "start": 17,
+        "end": 31
+      },
+      "kind": "init",
+      "start": 12,
+      "end": 31
+    }
+  ],
+  "start": 0,
+  "end": 33
+}

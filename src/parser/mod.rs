@@ -20,6 +20,6 @@ pub use statement::*;
 pub(crate) use util::*;
 
 pub(crate) use nom::{
-    branch::alt, bytes::complete::*, character::complete::*, combinator::*, multi::*,
-    number::complete::*, sequence::*,
+    branch::alt, bytes::complete::*, character::complete::*, combinator::*,
+    multi::*, number::complete::*, sequence::*,
 };

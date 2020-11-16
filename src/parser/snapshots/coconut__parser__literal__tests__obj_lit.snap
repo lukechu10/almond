@@ -1,0 +1,29 @@
+---
+source: src/parser/literal.rs
+expression: "parse_literal(r#\"{ abc: \"foo\" }\"#.into()).unwrap().1"
+---
+{
+  "type": "ObjectExpression",
+  "properties": [
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "abc",
+        "start": 2,
+        "end": 5
+      },
+      "value": {
+        "type": "Literal",
+        "value": "foo",
+        "start": 7,
+        "end": 12
+      },
+      "kind": "init",
+      "start": 2,
+      "end": 12
+    }
+  ],
+  "start": 0,
+  "end": 14
+}

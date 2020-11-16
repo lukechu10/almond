@@ -11,8 +11,8 @@ pub fn parse_literal(s: Span) -> ParseResult<Node> {
         numeric_lit,
         string_lit,
         array_lit,
+        object_lit,
     )))(s)
-    // TODO: string_lit and object_lit
 }
 
 pub fn null_lit(s: Span) -> ParseResult<Node> {
@@ -153,6 +153,103 @@ pub fn array_lit(s: Span) -> ParseResult<Node> {
     )(s)
 }
 
+fn parse_property_name(s: Span) -> ParseResult<Node> {
+    alt((parse_identifier, ws0(string_lit), ws0(numeric_lit)))(s)
+}
+
+fn parse_property_assignment(s: Span) -> ParseResult<Node> {
+    dbg!(s.fragment());
+    let simple = map(
+        spanned(separated_pair(
+            parse_property_name,
+            ws0(tag(":")),
+            parse_expr_no_seq,
+        )),
+        |((key, value), start, end)| {
+            NodeKind::Property {
+                key: Box::new(key),
+                value: Box::new(value),
+                kind: PropertyKind::Init,
+            }
+            .with_pos(start, end)
+        },
+    );
+    let getter = map(
+        spanned(tuple((
+            ws0(keyword_get),
+            parse_property_name,
+            spanned(tuple((ws0(tag("(")), ws0(tag(")")), parse_function_body))),
+        ))),
+        |((_, key, ((_, _, body), start_func, end_func)), start, end)| {
+            NodeKind::Property {
+                key: Box::new(key),
+                value: Box::new(
+                    NodeKind::FunctionExpression {
+                        function: Function {
+                            body: Box::new(body),
+                            id: Box::new(None),
+                            params: Vec::new(),
+                        },
+                    }
+                    .with_pos(start_func, end_func),
+                ),
+                kind: PropertyKind::Get,
+            }
+            .with_pos(start, end)
+        },
+    );
+    let setter = map(
+        spanned(tuple((
+            ws0(keyword_set),
+            parse_property_name,
+            spanned(tuple((
+                ws0(tag("(")),
+                parse_formal_param,
+                ws0(tag(")")),
+                parse_function_body,
+            ))),
+        ))),
+        |((_, key, ((_, param, _, body), start_func, end_func)), start, end)| {
+            NodeKind::Property {
+                key: Box::new(key),
+                value: Box::new(
+                    NodeKind::FunctionExpression {
+                        function: Function {
+                            body: Box::new(body),
+                            id: Box::new(None),
+                            params: vec![param],
+                        },
+                    }
+                    .with_pos(start_func, end_func),
+                ),
+                kind: PropertyKind::Set,
+            }
+            .with_pos(start, end)
+        },
+    );
+
+    alt((getter, setter, simple))(s)
+}
+
+pub fn object_lit(s: Span) -> ParseResult<Node> {
+    map(
+        spanned(delimited(
+            ws0(tag("{")),
+            alt((
+                // with trailing comma
+                terminated(
+                    separated_list1(ws0(tag(",")), parse_property_assignment),
+                    ws0(tag(",")),
+                ),
+                // without trailing comma
+                separated_list0(ws0(tag(",")), parse_property_assignment),
+            )),
+            ws0(tag("}")),
+        )),
+        |(properties, start, end)| NodeKind::ObjectExpression { properties }.with_pos(start, end),
+    )(s)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -245,5 +342,48 @@ mod tests {
     fn test_array_lit_with_trailing_comma() {
         assert_json_snapshot!(array_lit("[ true, true, ]\n".into()).unwrap().1);
         array_lit("[   true,\n true,\t ]\t".into()).unwrap();
+    }
+
+    #[test]
+    fn test_obj_lit() {
+        assert_json_snapshot!(parse_literal(r#"{ abc: "foo" }"#.into()).unwrap().1);
+        assert_json_snapshot!(
+            parse_literal(r#"{ abc: 123, def: { foo: "bar" } }"#.into())
+                .unwrap()
+                .1
+        );
+        assert_json_snapshot!(parse_literal(r#"{}"#.into()).unwrap().1);
+        assert_json_snapshot!(parse_literal(r#"{ }"#.into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_obj_lit_with_trailing_comma() {
+        assert_json_snapshot!(parse_literal(r#"{ abc: "foo", }"#.into()).unwrap().1);
+        assert_json_snapshot!(
+            parse_literal(r#"{ abc: 123, def: { foo: "bar", }, }"#.into())
+                .unwrap()
+                .1
+        );
+        parse_literal(r#"{,}"#.into()).unwrap_err();
+        parse_literal(r#"{ , }"#.into()).unwrap_err();
+    }
+
+    #[test]
+    fn test_obj_lit_getter_setter() {
+        assert_json_snapshot!(
+            parse_literal(
+                r#"{
+    get a() {
+        a;
+    },
+    set b(x) {
+        b;
+    }
+}"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 }

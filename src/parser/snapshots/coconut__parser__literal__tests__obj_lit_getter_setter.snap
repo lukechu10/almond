@@ -1,0 +1,92 @@
+---
+source: src/parser/literal.rs
+expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x) {\n        b;\n    }\n}\"#.into()).unwrap().1"
+---
+{
+  "type": "ObjectExpression",
+  "properties": [
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "a",
+        "start": 10,
+        "end": 11
+      },
+      "value": {
+        "type": "FunctionExpression",
+        "id": null,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "Identifier",
+                "name": "a",
+                "start": 24,
+                "end": 25
+              },
+              "start": 24,
+              "end": 26
+            }
+          ],
+          "start": 14,
+          "end": 32
+        },
+        "start": 11,
+        "end": 32
+      },
+      "kind": "get",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "b",
+        "start": 42,
+        "end": 43
+      },
+      "value": {
+        "type": "FunctionExpression",
+        "id": null,
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "x",
+            "start": 44,
+            "end": 45
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "Identifier",
+                "name": "b",
+                "start": 57,
+                "end": 58
+              },
+              "start": 57,
+              "end": 59
+            }
+          ],
+          "start": 47,
+          "end": 65
+        },
+        "start": 43,
+        "end": 65
+      },
+      "kind": "set",
+      "start": 38,
+      "end": 65
+    }
+  ],
+  "start": 0,
+  "end": 67
+}
