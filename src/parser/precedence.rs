@@ -59,7 +59,59 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
             (InfixOperator::SequenceOperator, BindingPower(0, 1)),
             tag(","),
         ),
+        // Ternary operator
+        value(
+            (InfixOperator::TernaryOperator, BindingPower(7, 8)),
+            tag("?"),
+        ),
+        // Logical
+        alt((
+            value(
+                (LogicalOperator::LogicalOr.into(), BindingPower(11, 12)),
+                tag("||"),
+            ),
+            value(
+                (LogicalOperator::LogicalAnd.into(), BindingPower(13, 14)),
+                tag("&&"),
+            ),
+        )),
+        // Bitwise
+        alt((
+            value(
+                (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
+                tag("|"),
+            ),
+            value(
+                (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
+                tag("^"),
+            ),
+            value(
+                (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
+                tag("&"),
+            ),
+        )),
+        // Equality
+        alt((
+            // Note: Triple equals and triple not equals are before equals equals and not equals to prevent matching wrong operator.
+            value(
+                (BinaryOperator::TripleEquals.into(), BindingPower(18, 20)),
+                tag("==="),
+            ),
+            value(
+                (BinaryOperator::TripleNotEquals.into(), BindingPower(18, 20)),
+                tag("!=="),
+            ),
+            value(
+                (BinaryOperator::EqualsEquals.into(), BindingPower(18, 20)),
+                tag("=="),
+            ),
+            value(
+                (BinaryOperator::NotEquals.into(), BindingPower(18, 20)),
+                tag("!="),
+            ),
+        )),
         // Assignment
+        // Note: Assignment are after equality to prevent matching `==` as `('=', '=').
         alt((
             value(
                 (AssignmentOperator::Equals.into(), BindingPower(6, 5)),
@@ -129,56 +181,6 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
                     BindingPower(6, 5),
                 ),
                 tag("|="),
-            ),
-        )),
-        // Ternary operator
-        value(
-            (InfixOperator::TernaryOperator, BindingPower(7, 8)),
-            tag("?"),
-        ),
-        // Logical
-        alt((
-            value(
-                (LogicalOperator::LogicalOr.into(), BindingPower(11, 12)),
-                tag("||"),
-            ),
-            value(
-                (LogicalOperator::LogicalAnd.into(), BindingPower(13, 14)),
-                tag("&&"),
-            ),
-        )),
-        // Bitwise
-        alt((
-            value(
-                (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
-                tag("|"),
-            ),
-            value(
-                (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
-                tag("^"),
-            ),
-            value(
-                (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
-                tag("&"),
-            ),
-        )),
-        // Equality
-        alt((
-            value(
-                (BinaryOperator::EqualsEquals.into(), BindingPower(18, 20)),
-                tag("=="),
-            ),
-            value(
-                (BinaryOperator::NotEquals.into(), BindingPower(18, 20)),
-                tag("!="),
-            ),
-            value(
-                (BinaryOperator::TripleEquals.into(), BindingPower(18, 20)),
-                tag("==="),
-            ),
-            value(
-                (BinaryOperator::TripleNotEquals.into(), BindingPower(18, 20)),
-                tag("!=="),
             ),
         )),
         // Relational

@@ -1,0 +1,49 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"if (x === 1) return 1;\\nelse return 0;\".into()).unwrap().1"
+---
+{
+  "type": "IfStatement",
+  "test": {
+    "type": "BinaryExpression",
+    "operator": "===",
+    "left": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 4,
+      "end": 5
+    },
+    "right": {
+      "type": "Literal",
+      "value": 1.0,
+      "start": 10,
+      "end": 11
+    },
+    "start": 4,
+    "end": 11
+  },
+  "consequent": {
+    "type": "ReturnStatement",
+    "argument": {
+      "type": "Literal",
+      "value": 1.0,
+      "start": 20,
+      "end": 21
+    },
+    "start": 13,
+    "end": 22
+  },
+  "alternate": {
+    "type": "ReturnStatement",
+    "argument": {
+      "type": "Literal",
+      "value": 0.0,
+      "start": 35,
+      "end": 36
+    },
+    "start": 28,
+    "end": 37
+  },
+  "start": 0,
+  "end": 37
+}

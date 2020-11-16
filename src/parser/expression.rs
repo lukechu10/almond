@@ -324,6 +324,8 @@ mod tests {
 
         assert_json_snapshot!(parse_expr("true && false".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x < y".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x == 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x === 1".into()).unwrap().1);
     }
 
     #[test]

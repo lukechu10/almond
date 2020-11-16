@@ -1,0 +1,85 @@
+---
+source: src/parser/functions.rs
+expression: "parse_program(r#\"var x = 1;\n                function foo() {\n                    if (x) {\n                        return x;\n                    }\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "x",
+            "start": 4,
+            "end": 5
+          },
+          "init": {
+            "type": "Literal",
+            "value": 1.0,
+            "start": 8,
+            "end": 9
+          },
+          "start": 4,
+          "end": 9
+        }
+      ],
+      "kind": "var",
+      "start": 0,
+      "end": 10
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "start": 36,
+        "end": 39
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "Identifier",
+              "name": "x",
+              "start": 68,
+              "end": 69
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "start": 104,
+                    "end": 105
+                  },
+                  "start": 97,
+                  "end": 106
+                }
+              ],
+              "start": 71,
+              "end": 128
+            },
+            "alternate": null,
+            "start": 64,
+            "end": 128
+          }
+        ],
+        "start": 42,
+        "end": 146
+      },
+      "start": 27,
+      "end": 146
+    }
+  ],
+  "start": 0,
+  "end": 146
+}

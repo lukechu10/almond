@@ -494,6 +494,8 @@ mod tests {
         assert_json_snapshot!(parse_stmt("if (x) { 1; } else { 2; }".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("if (x) 1; else 2;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("if (x) 1\nelse 2".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_stmt("if (x === 1) return 1;\nelse return 0;".into()).unwrap().1);
     }
 
     #[test]

@@ -158,7 +158,6 @@ fn parse_property_name(s: Span) -> ParseResult<Node> {
 }
 
 fn parse_property_assignment(s: Span) -> ParseResult<Node> {
-    dbg!(s.fragment());
     let simple = map(
         spanned(separated_pair(
             parse_property_name,

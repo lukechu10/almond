@@ -10,6 +10,7 @@ pub fn parse_program(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, _) = sp0(s)?; // eat all preceding whitespace
     let (s, body) = parse_function_body_inner(s)?;
+    // let (s, body) = many0(alt((parse_stmt, parse_declaration)))(s)?;
     let (s, end) = position(s)?; // Program loc should include all trailing whitespace
     Ok((s, NodeKind::Program { body }.with_pos(start, end)))
 }
@@ -178,6 +179,18 @@ mod tests {
             .unwrap()
             .1
         );
+        assert_json_snapshot!(
+            parse_function_declaration(
+                r#"function fib() {
+                    if (x === 0) return 0;
+                    else if (x === 1) return 1;
+                    else return fib(x - 1) + fib(x - 2);
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 
     #[test]
@@ -240,6 +253,62 @@ mod tests {
     fn parse_immediately_invoked_function_expr() {
         assert_json_snapshot!(
             parse_stmt(
+                r#"(function () {
+                    123; // something
+                })()"#
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_program() {
+        assert_json_snapshot!(
+            parse_program(
+                r#"var x = 1;
+                function foo() {
+                    return x;
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_program(
+                r#"var x = 1;
+                function foo() {
+                    if (x) {
+                        return x;
+                    }
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_program(
+                r#"
+                function fib() {
+                    if (x === 0) return 0;
+                    else if (x === 1) return 1;
+                    else return fib(x - 1) + fib(x - 2);
+                }
+                var x = fib(10);"#
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn parse_program_immediately_invoked_function_expr() {
+        assert_json_snapshot!(
+            parse_program(
                 r#"(function () {
                     123; // something
                 })()"#
