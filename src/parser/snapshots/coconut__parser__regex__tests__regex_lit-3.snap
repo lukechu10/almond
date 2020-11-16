@@ -1,0 +1,10 @@
+---
+source: src/parser/regex.rs
+expression: "parse_literal(r#\"/\\\\\\//g\"#.into()).unwrap().1"
+---
+{
+  "type": "Literal",
+  "value": "/\\\\\\//g",
+  "start": 0,
+  "end": 7
+}

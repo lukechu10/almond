@@ -1,0 +1,29 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"!(x && y)\".into()).unwrap().1"
+---
+{
+  "type": "UnaryExpression",
+  "operator": "!",
+  "prefix": true,
+  "argument": {
+    "type": "LogicalExpression",
+    "operator": "&&",
+    "left": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 2,
+      "end": 3
+    },
+    "right": {
+      "type": "Identifier",
+      "name": "y",
+      "start": 7,
+      "end": 8
+    },
+    "start": 2,
+    "end": 8
+  },
+  "start": 0,
+  "end": 9
+}

@@ -8,6 +8,7 @@ mod identifier;
 mod keyword;
 mod literal;
 mod precedence;
+mod regex;
 mod statement;
 mod util;
 pub use expression::*;
@@ -16,10 +17,11 @@ pub use identifier::*;
 pub use keyword::*;
 pub use literal::*;
 pub use precedence::*;
+pub use regex::*;
 pub use statement::*;
 pub(crate) use util::*;
 
 pub(crate) use nom::{
-    branch::alt, bytes::complete::*, character::complete::*, combinator::*,
-    multi::*, number::complete::*, sequence::*,
+    branch::alt, bytes::complete::*, character::complete::*, combinator::*, multi::*,
+    number::complete::*, sequence::*,
 };

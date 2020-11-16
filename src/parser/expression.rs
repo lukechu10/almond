@@ -325,10 +325,34 @@ mod tests {
         assert_json_snapshot!(parse_expr("true && false".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x < y".into()).unwrap().1);
 
+        // equality
         assert_json_snapshot!(parse_expr("x == 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x != 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x === 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x !== 1".into()).unwrap().1);
+
+        // relational
+        assert_json_snapshot!(parse_expr("x < 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x > 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x <= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x >= 1".into()).unwrap().1);
+
+        // bitwise
+        assert_json_snapshot!(parse_expr("x << 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x >> 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x >>> 1".into()).unwrap().1);
+
+        // logical
+        assert_json_snapshot!(parse_expr("x && y".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x || y".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_expr_bp_infix_str_concat() {
+        assert_json_snapshot!(parse_expr(r#""a" + "b""#.into()).unwrap().1);
+        assert_json_snapshot!(parse_expr(r#""a" + 123"#.into()).unwrap().1);
+        assert_json_snapshot!(parse_expr(r#""a" + {}"#.into()).unwrap().1);
+        assert_json_snapshot!(parse_expr(r#"[] + {}"#.into()).unwrap().1);
     }
 
     #[test]
@@ -336,11 +360,14 @@ mod tests {
         assert_json_snapshot!(parse_expr("-1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("+1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("+(+1)".into()).unwrap().1);
-        assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-1)
+        assert_json_snapshot!(parse_expr("1 + -2".into()).unwrap().1); // same as 1 + (-2)
         assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
 
         assert_json_snapshot!(parse_expr("typeof x".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("typeof module === \"object\"".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("!x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("!(x && y)".into()).unwrap().1);
     }
 
     #[test]
@@ -359,10 +386,33 @@ mod tests {
         assert_json_snapshot!(parse_expr("x += y += 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x += x * x".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x = a ? b : c".into()).unwrap().1);
-        assert_json_snapshot!(parse_expr("x = a ? myFunc : function () { return c; }".into()).unwrap().1);
+        assert_json_snapshot!(
+            parse_expr("x = a ? myFunc : function () { return c; }".into())
+                .unwrap()
+                .1
+        );
 
         assert_json_snapshot!(parse_expr("hello.value = \"world\"".into()).unwrap().1);
-        assert_json_snapshot!(parse_expr("myFunc = function () { return 0; }".into()).unwrap().1);
+        assert_json_snapshot!(
+            parse_expr("myFunc = function () { return 0; }".into())
+                .unwrap()
+                .1
+        );
+        assert_json_snapshot!(parse_expr("a = b = c;".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("x -= x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x *= x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x /= x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x %= x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x <<= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x >>= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x >>>= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x |= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x ^= 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x &= 1".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("x[1] = a".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x[\"foo\"] = a".into()).unwrap().1);
     }
 
     #[test]

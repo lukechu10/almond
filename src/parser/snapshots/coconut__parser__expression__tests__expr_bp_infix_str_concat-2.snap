@@ -1,0 +1,22 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(r#\"\"a\" + 123\"#.into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "+",
+  "left": {
+    "type": "Literal",
+    "value": "a",
+    "start": 0,
+    "end": 3
+  },
+  "right": {
+    "type": "Literal",
+    "value": 123.0,
+    "start": 6,
+    "end": 9
+  },
+  "start": 0,
+  "end": 9
+}

@@ -75,21 +75,6 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
                 tag("&&"),
             ),
         )),
-        // Bitwise
-        alt((
-            value(
-                (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
-                tag("|"),
-            ),
-            value(
-                (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
-                tag("^"),
-            ),
-            value(
-                (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
-                tag("&"),
-            ),
-        )),
         // Equality
         alt((
             // Note: Triple equals and triple not equals are before equals equals and not equals to prevent matching wrong operator.
@@ -183,34 +168,19 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
                 tag("|="),
             ),
         )),
-        // Relational
+        // Bitwise
         alt((
             value(
-                (BinaryOperator::Instanceof.into(), BindingPower(23, 24)),
-                keyword_instanceof,
+                (BinaryOperator::BitwiseOr.into(), BindingPower(15, 16)),
+                tag("|"),
             ),
             value(
-                (BinaryOperator::In.into(), BindingPower(23, 24)),
-                keyword_in,
+                (BinaryOperator::BitwiseXor.into(), BindingPower(17, 18)),
+                tag("^"),
             ),
             value(
-                (BinaryOperator::LessThan.into(), BindingPower(23, 24)),
-                tag("<"),
-            ),
-            value(
-                (BinaryOperator::LessThanEquals.into(), BindingPower(23, 24)),
-                tag("<="),
-            ),
-            value(
-                (BinaryOperator::GreaterThan.into(), BindingPower(23, 24)),
-                tag(">"),
-            ),
-            value(
-                (
-                    BinaryOperator::GreaterThanEquals.into(),
-                    BindingPower(23, 24),
-                ),
-                tag(">="),
+                (BinaryOperator::BitwiseAnd.into(), BindingPower(18, 20)),
+                tag("&"),
             ),
         )),
         // Bitwise shift
@@ -224,17 +194,47 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
             ),
             value(
                 (
+                    BinaryOperator::ZeroFillRightShift.into(),
+                    BindingPower(25, 26),
+                ),
+                tag(">>>"),
+            ),
+            value(
+                (
                     BinaryOperator::SignedRightShift.into(),
                     BindingPower(25, 26),
                 ),
                 tag(">>"),
             ),
+        )),
+        // Relational
+        alt((
+            value(
+                (BinaryOperator::Instanceof.into(), BindingPower(23, 24)),
+                keyword_instanceof,
+            ),
+            value(
+                (BinaryOperator::In.into(), BindingPower(23, 24)),
+                keyword_in,
+            ),
+            value(
+                (BinaryOperator::LessThanEquals.into(), BindingPower(23, 24)),
+                tag("<="),
+            ),
+            value(
+                (BinaryOperator::LessThan.into(), BindingPower(23, 24)),
+                tag("<"),
+            ),
             value(
                 (
-                    BinaryOperator::ZeroFillRightShift.into(),
-                    BindingPower(25, 26),
+                    BinaryOperator::GreaterThanEquals.into(),
+                    BindingPower(23, 24),
                 ),
-                tag(">>>"),
+                tag(">="),
+            ),
+            value(
+                (BinaryOperator::GreaterThan.into(), BindingPower(23, 24)),
+                tag(">"),
             ),
         )),
         // Additive

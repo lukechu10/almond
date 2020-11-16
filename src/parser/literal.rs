@@ -12,6 +12,7 @@ pub fn parse_literal(s: Span) -> ParseResult<Node> {
         string_lit,
         array_lit,
         object_lit,
+        regex_lit, // defined in regex.rs
     )))(s)
 }
 
@@ -362,6 +363,18 @@ mod tests {
                     },
                     value: 1 + 2,
                     foo: "abc"
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_literal(
+                r#"{
+                    get: function () {
+                        return {};
+                    }
                 }"#
                 .into()
             )

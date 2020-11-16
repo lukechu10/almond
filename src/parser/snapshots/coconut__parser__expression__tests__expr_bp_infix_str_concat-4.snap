@@ -1,0 +1,22 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(r#\"[] + {}\"#.into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "+",
+  "left": {
+    "type": "ArrayExpression",
+    "elements": [],
+    "start": 0,
+    "end": 2
+  },
+  "right": {
+    "type": "ObjectExpression",
+    "properties": [],
+    "start": 5,
+    "end": 7
+  },
+  "start": 0,
+  "end": 7
+}
