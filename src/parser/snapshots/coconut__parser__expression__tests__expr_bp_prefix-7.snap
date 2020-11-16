@@ -1,0 +1,29 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"typeof module === \\\"object\\\"\".into()).unwrap().1"
+---
+{
+  "type": "BinaryExpression",
+  "operator": "===",
+  "left": {
+    "type": "UnaryExpression",
+    "operator": "typeof",
+    "prefix": true,
+    "argument": {
+      "type": "Identifier",
+      "name": "module",
+      "start": 7,
+      "end": 13
+    },
+    "start": 0,
+    "end": 14
+  },
+  "right": {
+    "type": "Literal",
+    "value": "object",
+    "start": 18,
+    "end": 26
+  },
+  "start": 0,
+  "end": 26
+}

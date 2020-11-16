@@ -487,6 +487,16 @@ mod tests {
     }
 
     #[test]
+    fn test_expr_stmt_immediately_invoked_function_expr() {
+        assert_json_snapshot!(parse_stmt("(function () {
+            return 0;
+        })();".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("(function (x) {
+            return x * x;
+        })(10);".into()).unwrap().1);
+    }
+
+    #[test]
     fn test_if_stmt() {
         assert_json_snapshot!(parse_stmt("if (x) { 1; }".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("if (x) 1;".into()).unwrap().1);
@@ -580,6 +590,8 @@ mod tests {
         assert_json_snapshot!(parse_stmt("return\na;".into()).unwrap().1); // should be ContinueStatement followed by ExpressionStatement
         assert_json_snapshot!(parse_stmt("return a".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("return\t".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_stmt("return new Foo(123);".into()).unwrap().1);
     }
 
     #[test]
@@ -660,6 +672,7 @@ mod tests {
     fn test_throw_stmt() {
         assert_json_snapshot!(parse_stmt("throw true;".into()).unwrap().1);
         assert_json_snapshot!(parse_stmt("throw 3;".into()).unwrap().1);
+        assert_json_snapshot!(parse_stmt("throw new Error(\"an error!\");".into()).unwrap().1);
     }
 
     #[test]

@@ -1,0 +1,28 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"throw new Error(\\\"an error!\\\");\".into()).unwrap().1"
+---
+{
+  "type": "ThrowStatement",
+  "argument": {
+    "type": "NewExpression",
+    "callee": {
+      "type": "Identifier",
+      "name": "Error",
+      "start": 10,
+      "end": 15
+    },
+    "arguments": [
+      {
+        "type": "Literal",
+        "value": "an error!",
+        "start": 16,
+        "end": 27
+      }
+    ],
+    "start": 6,
+    "end": 28
+  },
+  "start": 0,
+  "end": 29
+}

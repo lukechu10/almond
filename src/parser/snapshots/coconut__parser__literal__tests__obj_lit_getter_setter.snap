@@ -1,6 +1,6 @@
 ---
 source: src/parser/literal.rs
-expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x) {\n        b;\n    }\n}\"#.into()).unwrap().1"
+expression: "parse_literal(r#\"{\n                    get a() {\n                        a;\n                    },\n                    set b(x) {\n                        b;\n                    }\n                }\"#.into()).unwrap().1"
 ---
 {
   "type": "ObjectExpression",
@@ -10,8 +10,8 @@ expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x
       "key": {
         "type": "Identifier",
         "name": "a",
-        "start": 10,
-        "end": 11
+        "start": 26,
+        "end": 27
       },
       "value": {
         "type": "FunctionExpression",
@@ -25,30 +25,30 @@ expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x
               "expression": {
                 "type": "Identifier",
                 "name": "a",
-                "start": 24,
-                "end": 25
+                "start": 56,
+                "end": 57
               },
-              "start": 24,
-              "end": 26
+              "start": 56,
+              "end": 58
             }
           ],
-          "start": 14,
-          "end": 32
+          "start": 30,
+          "end": 80
         },
-        "start": 11,
-        "end": 32
+        "start": 27,
+        "end": 80
       },
       "kind": "get",
-      "start": 6,
-      "end": 32
+      "start": 22,
+      "end": 80
     },
     {
       "type": "Property",
       "key": {
         "type": "Identifier",
         "name": "b",
-        "start": 42,
-        "end": 43
+        "start": 106,
+        "end": 107
       },
       "value": {
         "type": "FunctionExpression",
@@ -57,8 +57,8 @@ expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x
           {
             "type": "Identifier",
             "name": "x",
-            "start": 44,
-            "end": 45
+            "start": 108,
+            "end": 109
           }
         ],
         "body": {
@@ -69,24 +69,24 @@ expression: "parse_literal(r#\"{\n    get a() {\n        a;\n    },\n    set b(x
               "expression": {
                 "type": "Identifier",
                 "name": "b",
-                "start": 57,
-                "end": 58
+                "start": 137,
+                "end": 138
               },
-              "start": 57,
-              "end": 59
+              "start": 137,
+              "end": 139
             }
           ],
-          "start": 47,
-          "end": 65
+          "start": 111,
+          "end": 161
         },
-        "start": 43,
-        "end": 65
+        "start": 107,
+        "end": 161
       },
       "kind": "set",
-      "start": 38,
-      "end": 65
+      "start": 102,
+      "end": 161
     }
   ],
   "start": 0,
-  "end": 67
+  "end": 179
 }

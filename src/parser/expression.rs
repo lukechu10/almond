@@ -324,8 +324,11 @@ mod tests {
 
         assert_json_snapshot!(parse_expr("true && false".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x < y".into()).unwrap().1);
+
         assert_json_snapshot!(parse_expr("x == 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x != 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x === 1".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x !== 1".into()).unwrap().1);
     }
 
     #[test]
@@ -337,6 +340,7 @@ mod tests {
         assert_json_snapshot!(parse_expr("++x".into()).unwrap().1);
 
         assert_json_snapshot!(parse_expr("typeof x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("typeof module === \"object\"".into()).unwrap().1);
     }
 
     #[test]
@@ -354,6 +358,11 @@ mod tests {
         assert_json_snapshot!(parse_expr("x += 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x += y += 1".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x += x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x = a ? b : c".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x = a ? myFunc : function () { return c; }".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("hello.value = \"world\"".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("myFunc = function () { return 0; }".into()).unwrap().1);
     }
 
     #[test]
@@ -361,5 +370,7 @@ mod tests {
         assert_json_snapshot!(parse_expr("x.y".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x.y.z".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x.y[z]".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x.y[\"z\"]".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x.y[arr.length - 1]".into()).unwrap().1);
     }
 }

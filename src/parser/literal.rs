@@ -353,6 +353,21 @@ mod tests {
         );
         assert_json_snapshot!(parse_literal(r#"{}"#.into()).unwrap().1);
         assert_json_snapshot!(parse_literal(r#"{ }"#.into()).unwrap().1);
+
+        assert_json_snapshot!(
+            parse_literal(
+                r#"{
+                    test: function () {
+                        return {};
+                    },
+                    value: 1 + 2,
+                    foo: "abc"
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 
     #[test]
@@ -372,13 +387,13 @@ mod tests {
         assert_json_snapshot!(
             parse_literal(
                 r#"{
-    get a() {
-        a;
-    },
-    set b(x) {
-        b;
-    }
-}"#
+                    get a() {
+                        a;
+                    },
+                    set b(x) {
+                        b;
+                    }
+                }"#
                 .into()
             )
             .unwrap()

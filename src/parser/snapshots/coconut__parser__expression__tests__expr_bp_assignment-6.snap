@@ -1,0 +1,39 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"x = a ? b : c\".into()).unwrap().1"
+---
+{
+  "type": "AssignmentExpression",
+  "operator": "=",
+  "left": {
+    "type": "Identifier",
+    "name": "x",
+    "start": 0,
+    "end": 1
+  },
+  "right": {
+    "type": "ConditionalExpression",
+    "test": {
+      "type": "Identifier",
+      "name": "a",
+      "start": 4,
+      "end": 5
+    },
+    "consequent": {
+      "type": "Identifier",
+      "name": "b",
+      "start": 8,
+      "end": 9
+    },
+    "alternate": {
+      "type": "Identifier",
+      "name": "c",
+      "start": 12,
+      "end": 13
+    },
+    "start": 4,
+    "end": 13
+  },
+  "start": 0,
+  "end": 13
+}

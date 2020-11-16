@@ -1,0 +1,28 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"return new Foo(123);\".into()).unwrap().1"
+---
+{
+  "type": "ReturnStatement",
+  "argument": {
+    "type": "NewExpression",
+    "callee": {
+      "type": "Identifier",
+      "name": "Foo",
+      "start": 11,
+      "end": 14
+    },
+    "arguments": [
+      {
+        "type": "Literal",
+        "value": 123.0,
+        "start": 15,
+        "end": 18
+      }
+    ],
+    "start": 7,
+    "end": 19
+  },
+  "start": 0,
+  "end": 20
+}
