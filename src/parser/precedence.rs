@@ -7,10 +7,10 @@ use crate::parser::*;
 use nom::{branch::alt, bytes::complete::*, combinator::*};
 use nom_locate::position;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct BindingPower(pub i32, pub i32);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum InfixOperator {
     Binary(BinaryOperator),
     Logical(LogicalOperator),
@@ -53,7 +53,7 @@ impl From<AssignmentOperator> for InfixOperator {
 ///
 /// Returns `Err` if cannot parse a valid binary operator.
 pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower)> {
-    ws0(alt((
+    context("infix operator", ws0(alt((
         // Comma / Sequence
         value(
             (InfixOperator::SequenceOperator, BindingPower(0, 1)),
@@ -61,7 +61,7 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
         ),
         // Ternary operator
         value(
-            (InfixOperator::TernaryOperator, BindingPower(7, 8)),
+            (InfixOperator::TernaryOperator, BindingPower(8, 7)),
             tag("?"),
         ),
         // Logical
@@ -267,10 +267,10 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
         // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
         value((InfixOperator::DotOperator, BindingPower(41, 42)), tag(".")),
         // TODO
-    )))(s)
+    ))))(s)
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PrefixOperator {
     Unary(UnaryOperator),
     Update(UpdateOperator),
@@ -344,7 +344,7 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
     )))(s)
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum PostfixOperator {
     Update(UpdateOperator),
     /// Eats `[` (does not eat `]`).

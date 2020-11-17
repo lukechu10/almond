@@ -7,23 +7,37 @@ use nom_locate::position;
 
 /// Alias for `parse_expr_bp(s, 0)`.
 pub fn parse_expr(s: Span) -> ParseResult<Node> {
-    parse_expr_bp(s, 0)
+    context("expression", |s| parse_expr_bp(s, 0, false))(s)
 }
 
 /// Alias for `parse_expr_bp(s, 1)`. Should be used when parsing expressions in expression lists.
 /// This prevents matching the sequence (`,`) operator.
 pub fn parse_expr_no_seq(s: Span) -> ParseResult<Node> {
-    parse_expr_bp(s, 1)
+    context("expression no seq", |s| parse_expr_bp(s, 1, false))(s)
 }
 
 /// Parse an atomic expression — either a single token that is an
-// expression, an expression started by a keyword like `function` or
-// `new`, or an expression wrapped in punctuation like `()`, `[]`,
-// or `{}`.
+// expression, an expression started by a keyword like `function`.
 pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
     alt((
         parse_this_expr,
         parse_identifier,
+        literal::parse_literal,
+        parse_function_expr,
+        parse_paren_expr,
+    ))(s)
+}
+
+/// Parse an atomic expression — either a single token that is an
+/// expression, an expression started by a keyword like `function`.
+/// This variant of `parse_primary_expr` allows parsing an identifier that is a reserved name.
+/// This method should be used instead of `parse_primary_expr` when preceding token is `.` operator (for member expression).
+/// # Spec
+/// http://www.ecma-international.org/ecma-262/#sec-property-accessors
+pub fn parse_primary_expr_allow_reserved(s: Span) -> ParseResult<Node> {
+    alt((
+        parse_this_expr,
+        parse_identifier_name, // note that this is different from `parse_identifier` which does not allow reserved name.
         literal::parse_literal,
         parse_function_expr,
         parse_paren_expr,
@@ -37,7 +51,10 @@ pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {
-    delimited(ws0(char('(')), parse_expr, ws0(char(')')))(s)
+    context(
+        "paren expression",
+        delimited(ws0(char('(')), parse_expr, ws0(char(')'))),
+    )(s)
 }
 
 fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
@@ -45,18 +62,24 @@ fn parse_opt_expr_in_list(s: Span) -> ParseResult<Option<Node>> {
 }
 
 pub fn parse_expr_list_with_opt_expr(s: Span) -> ParseResult<Vec<Option<Node>>> {
-    terminated(
-        separated_list0(ws0(char(',')), parse_opt_expr_in_list),
-        // trailing comma
-        ws0(opt(char(','))),
+    context(
+        "expression list with optional expression",
+        terminated(
+            separated_list0(ws0(char(',')), parse_opt_expr_in_list),
+            // trailing comma
+            ws0(opt(char(','))),
+        ),
     )(s)
 }
 
 pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
-    terminated(
-        separated_list0(ws0(char(',')), parse_expr_no_seq),
-        // trailing comma
-        ws0(opt(char(','))),
+    context(
+        "expression list",
+        terminated(
+            separated_list0(ws0(char(',')), parse_expr_no_seq),
+            // trailing comma
+            ws0(opt(char(','))),
+        ),
     )(s)
 }
 
@@ -64,7 +87,9 @@ pub fn parse_expr_list(s: Span) -> ParseResult<Vec<Node>> {
 fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, (prefix_op, BindingPower(_, right_bp))) = parse_prefix_operator(s)?;
-    let (s, rhs) = parse_expr_bp(s, right_bp)?;
+    let (s, rhs) = parse_expr_bp(
+        s, right_bp, /* reserved is only used after `.` operator */ false,
+    )?;
 
     let (mut s, mut end) = position(s)?;
 
@@ -100,8 +125,18 @@ fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
 
 /// Pratt parsing for expressions with operator precedence.
 /// Check out [https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html) to see how Pratt parsing works.
-pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
-    let (mut s, mut lhs) = alt((parse_prefix_expr, parse_primary_expr))(s)?;
+/// # Params
+/// * `min_bp` - The minimal binding power to accept.
+/// * `allow_reserved` - If `true`, will call `parse_primary_expr_allow_reserved` instead of `parse_primary_expr`. In almost all cases, this should be `false`.
+pub fn parse_expr_bp(s: Span, min_bp: i32, allow_reserved: bool) -> ParseResult<Node> {
+    let (mut s, mut lhs) = alt((
+        parse_prefix_expr,
+        if allow_reserved {
+            parse_primary_expr_allow_reserved
+        } else {
+            parse_primary_expr
+        },
+    ))(s)?;
 
     loop {
         if let Ok((s_tmp, (postfix_op, BindingPower(left_bp, _), mut end))) =
@@ -175,13 +210,13 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
         s = s_tmp;
 
         if let InfixOperator::TernaryOperator = op {
-            let (s_tmp, mhs) = parse_expr(s)?;
+            let (s_tmp, mhs) = parse_expr_bp(s, right_bp, false)?;
             s = s_tmp;
 
             let (s_tmp, _) = ws0(tag(":"))(s)?;
             s = s_tmp;
 
-            let (s_tmp, rhs) = parse_expr(s)?;
+            let (s_tmp, rhs) = parse_expr_bp(s, right_bp, false)?;
             s = s_tmp;
 
             let start = lhs.clone().start;
@@ -197,7 +232,7 @@ pub fn parse_expr_bp(s: Span, min_bp: i32) -> ParseResult<Node> {
             continue;
         }
 
-        let (s_tmp, rhs) = parse_expr_bp(s, right_bp)?;
+        let (s_tmp, rhs) = parse_expr_bp(s, right_bp, op == InfixOperator::DotOperator)?;
         s = s_tmp;
 
         let start = lhs.clone().start;
@@ -257,6 +292,21 @@ mod tests {
     fn smoke_test_primary_expr() {
         parse_primary_expr("this".into()).unwrap();
         parse_primary_expr("myVar".into()).unwrap();
+    }
+
+    #[test]
+    fn test_identifier_expr() {
+        assert_json_snapshot!(parse_expr("myIdentifier".into()).unwrap().1);
+    }
+
+    #[test]
+    fn test_expr_bp_guard_in() {
+        assert_json_snapshot!(
+            parse_expr_bp("myIdentifier in foo".into(), 25, false)
+                .unwrap()
+                .1
+        );
+        // should only parse myIdentifier
     }
 
     #[test]
@@ -413,6 +463,16 @@ mod tests {
 
         assert_json_snapshot!(parse_expr("x[1] = a".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x[\"foo\"] = a".into()).unwrap().1);
+
+        assert_json_snapshot!(
+            parse_expr(
+                r#"identifier = "(?:\\\\[\\da-fA-F]{1,6}" + whitespace +
+				"?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+""#
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 
     #[test]
@@ -422,5 +482,41 @@ mod tests {
         assert_json_snapshot!(parse_expr("x.y[z]".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x.y[\"z\"]".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x.y[arr.length - 1]".into()).unwrap().1);
+
+        assert_json_snapshot!(
+            parse_expr("x.y()\n// abc\n/* 123 */\n.z()".into())
+                .unwrap()
+                .1
+        );
+        assert_json_snapshot!(
+            parse_expr("x.y(123)\n// abc\n/* 123 */\n.z(abc)".into())
+                .unwrap()
+                .1
+        );
+        assert_json_snapshot!(
+            parse_expr(
+                r#"test
+                    .then(fn)
+                    // properties can be reserved words ("catch" keyword)
+                    .catch(function (error) {
+                        console.error(error);
+                    });"#
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_expr_bp_no_seq() {
+        assert_json_snapshot!(parse_expr_no_seq("x, y".into()).unwrap().1); // should not parse ", y"
+        assert_json_snapshot!(
+            parse_expr_no_seq(
+                "test() ? function () { return 0; } : function() { return 1; }, y".into()
+            )
+            .unwrap()
+            .1
+        ); // should not parse ", y"
     }
 }

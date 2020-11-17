@@ -1,11 +1,36 @@
 //! Utilities.
 
 use crate::parser::*;
-use nom::{IResult, Offset, Parser, Slice};
+use nom::{
+    error::{ErrorKind, ParseError},
+    IResult, Offset, Parser, Slice,
+};
 use nom_locate::position;
 
+// #[derive(Debug, PartialEq)]
+// pub enum JsParseError<I> {
+//     UnknownOperator,
+//     Nom(I, ErrorKind),
+// }
+
+// impl<I> ParseError<I> for JsParseError<I> {
+//     fn from_error_kind(input: I, kind: ErrorKind) -> Self {
+//         JsParseError::Nom(input, kind)
+//     }
+
+//     fn append(_: I, _: ErrorKind, other: Self) -> Self {
+//         other
+//     }
+// }
+// impl<'a> From<nom::error::Error<Span<'a>>> for JsParseError<Span<'a>> {
+//     fn from(nom_err: nom::error::Error<Span<'a>>) -> Self {
+//         JsParseError::Nom(nom_err.input, nom_err.code)
+//     }
+// }
+
+pub type JsParseError<'a> = nom::error::VerboseError<Span<'a>>;
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
-pub type ParseResult<'a, T> = IResult<Span<'a>, T>;
+pub type ParseResult<'a, T> = IResult<Span<'a>, T, JsParseError<'a>>;
 
 fn is_whitespace(c: &char) -> bool {
     matches!(
@@ -117,7 +142,7 @@ pub fn sp_no_nl1(s: Span) -> ParseResult<()> {
 /// Alias for `terminated(f, sp0)`.
 pub fn ws0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
-    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+    F: Parser<Span<'a>, O1, JsParseError<'a>>,
 {
     move |s: Span<'a>| {
         let (s, o1) = f.parse(s)?;
@@ -128,7 +153,7 @@ where
 /// Alias for `terminated(f, sp1)`.
 pub fn ws1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
-    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+    F: Parser<Span<'a>, O1, JsParseError<'a>>,
 {
     move |s: Span<'a>| {
         let (s, o1) = f.parse(s)?;
@@ -139,7 +164,7 @@ where
 /// Alias for `terminated(f, sp_no_nl0)`.
 pub fn ws_no_nl0<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
-    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+    F: Parser<Span<'a>, O1, JsParseError<'a>>,
 {
     move |s: Span<'a>| {
         let (s, o1) = f.parse(s)?;
@@ -150,7 +175,7 @@ where
 /// Alias for `terminated(f, sp_no_nl1)`.
 pub fn ws_no_nl1<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<O1>
 where
-    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+    F: Parser<Span<'a>, O1, JsParseError<'a>>,
 {
     move |s: Span<'a>| {
         let (s, o1) = f.parse(s)?;
@@ -161,7 +186,7 @@ where
 /// Applies a parser and records start and end position. Ignores whitespace by trimming the end of the matched str.
 pub fn spanned<'a, O1, F>(mut f: F) -> impl FnMut(Span<'a>) -> ParseResult<(O1, Span, Span)>
 where
-    F: Parser<Span<'a>, O1, nom::error::Error<Span<'a>>>,
+    F: Parser<Span<'a>, O1, JsParseError<'a>>,
 {
     move |s: Span<'a>| {
         let (matched_s, o1) = f.parse(s)?;
@@ -184,6 +209,18 @@ where
 /// See https://es5.github.io/#x7.9 for more information.
 pub fn semi(s: Span) -> ParseResult<()> {
     value((), tag(";"))(s)
+}
+
+/// Prints the stack trace of a `VerboseError` as a `String` to stderr.
+pub fn verbose_trace_dbg(input: &str, err: JsParseError) {
+    let err = nom::error::VerboseError {
+        errors: err
+            .errors
+            .iter()
+            .map(|e| (*e.0.fragment(), e.1.clone()))
+            .collect(),
+    };
+    eprintln!("{}", nom::error::convert_error(input, err));
 }
 
 #[cfg(test)]

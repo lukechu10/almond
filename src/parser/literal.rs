@@ -71,12 +71,13 @@ fn character_double_quote(s: Span) -> ParseResult<char> {
         alt((
             map_res(anychar, |c| {
                 Ok(match c {
-                    '"' | '\\' | '/' => c,
+                    '\'' | '"' | '\\' | '/' => c,
                     'b' => '\x08',
                     'f' => '\x0C',
                     'n' => '\n',
                     'r' => '\r',
                     't' => '\t',
+                    '0' => '\0',
                     _ => return Err(()),
                 })
             }),
@@ -94,12 +95,13 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
         alt((
             map_res(anychar, |c| {
                 Ok(match c {
-                    '\'' | '\\' | '/' => c,
+                    '\'' | '"' | '\\' | '/' => c,
                     'b' => '\x08',
                     'f' => '\x0C',
                     'n' => '\n',
                     'r' => '\r',
                     't' => '\t',
+                    '0' => '\0',
                     _ => return Err(()),
                 })
             }),
@@ -111,30 +113,39 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
 }
 
 pub fn string_lit(s: Span) -> ParseResult<Node> {
-    map(
-        spanned(alt((
-            delimited(
-                char('"'),
-                fold_many0(character_double_quote, String::new(), |mut string, c| {
-                    string.push(c);
-                    string
-                }),
-                char('"'),
-            ),
-            delimited(
-                char('\''),
-                fold_many0(character_single_quote, String::new(), |mut string, c| {
-                    string.push(c);
-                    string
-                }),
-                char('\''),
-            ),
-        ))),
-        |(string, start, end)| {
-            LiteralValue::String(string)
-                .into_node_kind()
-                .with_pos(start, end)
-        },
+    context(
+        "string literal",
+        map(
+            spanned(alt((
+                context(
+                    "string literal double quotes",
+                    delimited(
+                        char('"'),
+                        fold_many0(character_double_quote, String::new(), |mut string, c| {
+                            string.push(c);
+                            string
+                        }),
+                        char('"'),
+                    ),
+                ),
+                context(
+                    "string literal single quotes",
+                    delimited(
+                        char('\''),
+                        fold_many0(character_single_quote, String::new(), |mut string, c| {
+                            string.push(c);
+                            string
+                        }),
+                        char('\''),
+                    ),
+                ),
+            ))),
+            |(string, start, end)| {
+                LiteralValue::String(string)
+                    .into_node_kind()
+                    .with_pos(start, end)
+            },
+        ),
     )(s)
 }
 
@@ -155,7 +166,11 @@ pub fn array_lit(s: Span) -> ParseResult<Node> {
 }
 
 fn parse_property_name(s: Span) -> ParseResult<Node> {
-    alt((parse_identifier, ws0(string_lit), ws0(numeric_lit)))(s)
+    alt((
+        parse_identifier_name, // not parse_identifier
+        ws0(string_lit),
+        ws0(numeric_lit),
+    ))(s)
 }
 
 fn parse_property_assignment(s: Span) -> ParseResult<Node> {
@@ -324,6 +339,22 @@ mod tests {
             parse_literal(r#""\n""#.into()).unwrap().1.kind,
             LiteralValue::String("\n".into()).into_node_kind()
         );
+        assert_eq!(
+            parse_literal(r#""?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+""#.into())
+                .unwrap()
+                .1
+                .kind,
+            LiteralValue::String("?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+".into()).into_node_kind()
+        );
+        // unicode escape sequences
+        assert_eq!(
+            parse_literal(r#""\uFFFD""#.into()).unwrap().1.kind,
+            LiteralValue::String("\u{fffd}".into()).into_node_kind()
+        );
+        assert_eq!(
+            parse_literal(r#""\ufffd""#.into()).unwrap().1.kind,
+            LiteralValue::String("\u{fffd}".into()).into_node_kind()
+        );
     }
 
     #[test]
@@ -347,6 +378,7 @@ mod tests {
     #[test]
     fn test_obj_lit() {
         assert_json_snapshot!(parse_literal(r#"{ abc: "foo" }"#.into()).unwrap().1);
+        parse_literal(r#"{ abc: 1, 2, 3 }"#.into()).unwrap_err();
         assert_json_snapshot!(
             parse_literal(r#"{ abc: 123, def: { foo: "bar" } }"#.into())
                 .unwrap()
@@ -375,6 +407,21 @@ mod tests {
                     get: function () {
                         return {};
                     }
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_literal(
+                r#"{
+                    get: test() ? function () {
+                        return 0;
+                    } : function () {
+                        return 1;
+                    },
+                    foo: bar
                 }"#
                 .into()
             )

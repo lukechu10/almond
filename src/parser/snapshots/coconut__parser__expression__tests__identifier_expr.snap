@@ -1,0 +1,10 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"myIdentifier\".into()).unwrap().1"
+---
+{
+  "type": "Identifier",
+  "name": "myIdentifier",
+  "start": 0,
+  "end": 12
+}

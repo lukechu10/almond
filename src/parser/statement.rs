@@ -92,7 +92,7 @@ pub fn parse_var_stmt_no_semi(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_empty_stmt(s: Span) -> ParseResult<Node> {
-    map(spanned(tag(";")), |(_, start, end)| {
+    map(spanned(ws0(tag(";"))), |(_, start, end)| {
         NodeKind::EmptyStatement.with_pos(start, end)
     })(s)
 }
@@ -221,7 +221,7 @@ pub fn parse_for_in_stmt(s: Span) -> ParseResult<Node> {
             delimited(
                 pair(ws0(keyword_for), ws0(tag("("))),
                 separated_pair(
-                    alt((parse_var_stmt, |s| parse_expr_bp(s, 23 /* no in */))),
+                    alt((|s| parse_expr_bp(s, 25 /* no in */, false), parse_var_stmt)),
                     ws0(keyword_in),
                     parse_expr,
                 ),
@@ -558,6 +558,32 @@ mod tests {
                 "for (var elem in arr) {
                     elem;
                 }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_stmt(
+                "for (elem in arr) {
+                    elem;
+                }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_stmt(
+                "for (x.y in arr) { }"
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_stmt(
+                "for (x[y] in arr) { }"
                 .into()
             )
             .unwrap()

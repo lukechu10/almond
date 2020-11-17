@@ -1,0 +1,39 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"for (elem in arr) {\n                    elem;\n                }\".into()).unwrap().1"
+---
+{
+  "type": "ForInStatement",
+  "left": {
+    "type": "Identifier",
+    "name": "elem",
+    "start": 5,
+    "end": 9
+  },
+  "right": {
+    "type": "Identifier",
+    "name": "arr",
+    "start": 13,
+    "end": 16
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "ExpressionStatement",
+        "expression": {
+          "type": "Identifier",
+          "name": "elem",
+          "start": 40,
+          "end": 44
+        },
+        "start": 40,
+        "end": 45
+      }
+    ],
+    "start": 18,
+    "end": 63
+  },
+  "start": 0,
+  "end": 63
+}

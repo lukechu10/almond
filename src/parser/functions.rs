@@ -9,7 +9,7 @@ use nom_locate::position;
 pub fn parse_program(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, _) = sp0(s)?; // eat all preceding whitespace
-    let (s, body) = parse_function_body_inner(s)?;
+    let (s, body) = all_consuming(parse_function_body_inner)(s)?;
     // let (s, body) = parse_stmt(s)?;
     // let body = vec![body];
     let (s, end) = position(s)?; // Program loc should include all trailing whitespace
@@ -188,6 +188,16 @@ mod tests {
                     else return fib(x - 1) + fib(x - 2);
                 }"#
                 .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_program(
+                r#"function foo() {
+                    // stuff
+                }; foo();"# // note the `;` after the function declaration. Should be parsed as an `EmptyStatement`.
+                    .into()
             )
             .unwrap()
             .1

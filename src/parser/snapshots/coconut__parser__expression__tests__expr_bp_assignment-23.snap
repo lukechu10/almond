@@ -1,0 +1,46 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(r#\"identifier = \"(?:\\\\\\\\[\\\\da-fA-F]{1,6}\" + whitespace +\n\t\t\t\t\"?|\\\\\\\\[^\\\\r\\\\n\\\\f]|[\\\\w-]|[^\\0-\\\\x7f])+\"\"#.into()).unwrap().1"
+---
+{
+  "type": "AssignmentExpression",
+  "operator": "=",
+  "left": {
+    "type": "Identifier",
+    "name": "identifier",
+    "start": 0,
+    "end": 10
+  },
+  "right": {
+    "type": "BinaryExpression",
+    "operator": "+",
+    "left": {
+      "type": "BinaryExpression",
+      "operator": "+",
+      "left": {
+        "type": "Literal",
+        "value": "(?:\\\\[\\da-fA-F]{1,6}",
+        "start": 13,
+        "end": 38
+      },
+      "right": {
+        "type": "Identifier",
+        "name": "whitespace",
+        "start": 41,
+        "end": 51
+      },
+      "start": 13,
+      "end": 51
+    },
+    "right": {
+      "type": "Literal",
+      "value": "?|\\\\[^\\r\\n\\f]|[\\w-]|[^\u0000-\\x7f])+",
+      "start": 58,
+      "end": 99
+    },
+    "start": 13,
+    "end": 99
+  },
+  "start": 0,
+  "end": 99
+}

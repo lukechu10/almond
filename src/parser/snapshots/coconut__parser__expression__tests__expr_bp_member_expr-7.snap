@@ -1,0 +1,60 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(\"x.y(123)\\n// abc\\n/* 123 */\\n.z(abc)\".into()).unwrap().1"
+---
+{
+  "type": "CallExpression",
+  "callee": {
+    "type": "MemberExpression",
+    "object": {
+      "type": "CallExpression",
+      "callee": {
+        "type": "MemberExpression",
+        "object": {
+          "type": "Identifier",
+          "name": "x",
+          "start": 0,
+          "end": 1
+        },
+        "property": {
+          "type": "Identifier",
+          "name": "y",
+          "start": 2,
+          "end": 3
+        },
+        "computed": false,
+        "start": 0,
+        "end": 3
+      },
+      "arguments": [
+        {
+          "type": "Literal",
+          "value": 123.0,
+          "start": 4,
+          "end": 7
+        }
+      ],
+      "start": 0,
+      "end": 8
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "z",
+      "start": 27,
+      "end": 28
+    },
+    "computed": false,
+    "start": 0,
+    "end": 28
+  },
+  "arguments": [
+    {
+      "type": "Identifier",
+      "name": "abc",
+      "start": 29,
+      "end": 32
+    }
+  ],
+  "start": 0,
+  "end": 33
+}

@@ -1,0 +1,39 @@
+---
+source: src/parser/statement.rs
+expression: "parse_stmt(\"for (x.y in arr) { }\".into()).unwrap().1"
+---
+{
+  "type": "ForInStatement",
+  "left": {
+    "type": "MemberExpression",
+    "object": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 5,
+      "end": 6
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "y",
+      "start": 7,
+      "end": 8
+    },
+    "computed": false,
+    "start": 5,
+    "end": 8
+  },
+  "right": {
+    "type": "Identifier",
+    "name": "arr",
+    "start": 12,
+    "end": 15
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [],
+    "start": 17,
+    "end": 20
+  },
+  "start": 0,
+  "end": 20
+}

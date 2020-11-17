@@ -1,0 +1,10 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr_no_seq(\"x, y\".into()).unwrap().1"
+---
+{
+  "type": "Identifier",
+  "name": "x",
+  "start": 0,
+  "end": 1
+}
