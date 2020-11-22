@@ -1,0 +1,58 @@
+---
+source: src/parser/functions.rs
+expression: "parse_program(r#\"function foo() {\n                    test;\n                    // abc \"123\"-\n                    // test\n                    foo();\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "start": 9,
+        "end": 12
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "Identifier",
+              "name": "test",
+              "start": 37,
+              "end": 41
+            },
+            "start": 37,
+            "end": 104
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "start": 125,
+                "end": 128
+              },
+              "arguments": [],
+              "start": 125,
+              "end": 130
+            },
+            "start": 125,
+            "end": 131
+          }
+        ],
+        "start": 15,
+        "end": 149
+      },
+      "start": 0,
+      "end": 149
+    }
+  ],
+  "start": 0,
+  "end": 149
+}

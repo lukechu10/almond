@@ -3,15 +3,19 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
+use nom::InputLength;
 use nom_locate::position;
 
 /// Parses a complete JS program
 pub fn parse_program(s: Span) -> ParseResult<Node> {
     let (s, start) = position(s)?;
     let (s, _) = sp0(s)?; // eat all preceding whitespace
-    let (s, body) = all_consuming(parse_function_body_inner)(s)?;
-    // let (s, body) = parse_stmt(s)?;
-    // let body = vec![body];
+
+    let (s, body) = parse_function_body_inner(s)?;
+    if s.input_len() != 0 {
+        panic!("The source code was not completely parsed. This is a bug with the parser.\nUnparsed code starting on line {}", s.location_line());
+    }
+
     let (s, end) = position(s)?; // Program loc should include all trailing whitespace
     Ok((s, NodeKind::Program { body }.with_pos(start, end)))
 }
@@ -22,25 +26,28 @@ pub fn parse_declaration(s: Span) -> ParseResult<Node> {
 
 pub fn parse_function_declaration(s: Span) -> ParseResult<Node> {
     let parse_function_declaration_signature = pair(
-        preceded(ws0(keyword_function), parse_identifier),
+        preceded(ws1(keyword_function), parse_identifier),
         delimited(ws0(tag("(")), parse_formal_param_list, ws0(tag(")"))),
     );
 
-    map(
-        spanned(pair(
-            parse_function_declaration_signature,
-            parse_function_body,
-        )),
-        |(((id, params), body), start, end)| {
-            NodeKind::FunctionDeclaration {
-                function: Function {
-                    id: Box::new(Some(id)),
-                    params,
-                    body: Box::new(body),
-                },
-            }
-            .with_pos(start, end)
-        },
+    context(
+        "function declaration",
+        map(
+            spanned(pair(
+                parse_function_declaration_signature,
+                parse_function_body,
+            )),
+            |(((id, params), body), start, end)| {
+                NodeKind::FunctionDeclaration {
+                    function: Function {
+                        id: Box::new(Some(id)),
+                        params,
+                        body: Box::new(body),
+                    },
+                }
+                .with_pos(start, end)
+            },
+        ),
     )(s)
 }
 
@@ -50,29 +57,35 @@ pub fn parse_function_expr(s: Span) -> ParseResult<Node> {
         delimited(ws0(tag("(")), parse_formal_param_list, ws0(tag(")"))),
     );
 
-    map(
-        spanned(pair(parse_function_expr_signature, parse_function_body)),
-        |(((id, params), body), start, end)| {
-            NodeKind::FunctionExpression {
-                function: Function {
-                    id: Box::new(id),
-                    params,
-                    body: Box::new(body),
-                },
-            }
-            .with_pos(start, end)
-        },
+    context(
+        "function expression",
+        map(
+            spanned(pair(parse_function_expr_signature, parse_function_body)),
+            |(((id, params), body), start, end)| {
+                NodeKind::FunctionExpression {
+                    function: Function {
+                        id: Box::new(id),
+                        params,
+                        body: Box::new(body),
+                    },
+                }
+                .with_pos(start, end)
+            },
+        ),
     )(s)
 }
 
 pub fn parse_function_body(s: Span) -> ParseResult<Node> {
-    map(
-        spanned(delimited(
-            ws0(tag("{")),
-            parse_function_body_inner,
-            ws0(tag("}")),
-        )),
-        |(body, start, end)| NodeKind::BlockStatement { body }.with_pos(start, end),
+    context(
+        "function body",
+        map(
+            spanned(delimited(
+                ws0(tag("{")),
+                parse_function_body_inner,
+                ws0(tag("}")),
+            )),
+            |(body, start, end)| NodeKind::BlockStatement { body }.with_pos(start, end),
+        ),
     )(s)
 }
 
@@ -80,13 +93,13 @@ pub fn parse_function_body_inner(s: Span) -> ParseResult<Vec<Node>> {
     let parse_directive_list = many0(parse_directive);
     let parse_source_element_list = many0(parse_source_elem);
 
-    map(
+    context("function body inner", map(
         pair(parse_directive_list, parse_source_element_list),
         |(mut directives, stmts)| {
             directives.extend(stmts);
             directives
         },
-    )(s)
+    ))(s)
 }
 
 pub fn parse_formal_param_list(s: Span) -> ParseResult<Vec<Node>> {
@@ -314,6 +327,33 @@ mod tests {
             .unwrap()
             .1
         );
+        assert_json_snapshot!(
+            parse_program(
+                r#"function foo() {
+                    test;
+                    // abc "123"-
+                    // test
+                    foo();
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_empty_function() {
+        assert_json_snapshot!(
+            parse_program(
+                r#"function foo(callback) {
+                    // A👍a
+                }"#
+                .into()
+            )
+            .unwrap()
+            .1
+        );
     }
 
     #[test]
@@ -323,6 +363,18 @@ mod tests {
                 r#"(function () {
                     123; // something
                 })()"#
+                    .into()
+            )
+            .unwrap()
+            .1
+        );
+        assert_json_snapshot!(
+            parse_program(
+                r#"(function (global, factory) {
+                    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+                        typeof define === 'function' && define.amd ? define(['exports'], factory) :
+                            (global = global || self, factory(global.Library = {}));
+                }(this, (function (exports) {})));"#
                     .into()
             )
             .unwrap()

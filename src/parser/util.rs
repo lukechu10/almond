@@ -1,32 +1,8 @@
 //! Utilities.
 
 use crate::parser::*;
-use nom::{
-    error::{ErrorKind, ParseError},
-    IResult, Offset, Parser, Slice,
-};
+use nom::{IResult, Offset, Parser, Slice};
 use nom_locate::position;
-
-// #[derive(Debug, PartialEq)]
-// pub enum JsParseError<I> {
-//     UnknownOperator,
-//     Nom(I, ErrorKind),
-// }
-
-// impl<I> ParseError<I> for JsParseError<I> {
-//     fn from_error_kind(input: I, kind: ErrorKind) -> Self {
-//         JsParseError::Nom(input, kind)
-//     }
-
-//     fn append(_: I, _: ErrorKind, other: Self) -> Self {
-//         other
-//     }
-// }
-// impl<'a> From<nom::error::Error<Span<'a>>> for JsParseError<Span<'a>> {
-//     fn from(nom_err: nom::error::Error<Span<'a>>) -> Self {
-//         JsParseError::Nom(nom_err.input, nom_err.code)
-//     }
-// }
 
 pub type JsParseError<'a> = nom::error::VerboseError<Span<'a>>;
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
@@ -84,7 +60,7 @@ pub fn line_terminator_sequence(s: Span) -> ParseResult<()> {
 fn single_line_comment(s: Span) -> ParseResult<Span> {
     let (s, _) = tag("//")(s)?;
     let (s, comment) = take_while(|c| !is_line_terminator(c))(s)?;
-    let (s, _) = alt((value((), eof), line_terminator))(s)?;
+    let (s, _) = alt((line_terminator, value((), eof)))(s)?;
     Ok((s, comment))
 }
 
@@ -192,7 +168,7 @@ where
         let (matched_s, o1) = f.parse(s)?;
         let index = s.offset(&matched_s);
         let slice = s.slice(..index).trim_end();
-        let (_, end) = preceded(take(slice.len()), position)(s)?;
+        let (_, end) = preceded(take(slice.chars().count()), position)(s)?;
 
         Ok((
             matched_s,
@@ -239,6 +215,7 @@ mod tests {
     fn test_comment() {
         assert_eq!(*comment("// abc\ndef".into()).unwrap().0.fragment(), "def");
         assert_eq!(*comment("// abc\rdef".into()).unwrap().0.fragment(), "def");
+        assert_eq!(*comment("// abc-\ndef".into()).unwrap().0.fragment(), "def");
         assert_eq!(
             *comment("// abc\u{2028}def".into()).unwrap().0.fragment(),
             "def"
@@ -250,6 +227,14 @@ mod tests {
         assert_eq!(
             *comment("// abc\r\ndef".into()).unwrap().0.fragment(),
             "\ndef"
+        );
+        assert_eq!(
+            *comment("// abc-\r\ndef".into()).unwrap().0.fragment(),
+            "\ndef"
+        );
+        assert_eq!(
+            *comment("// abc👍\nabc".into()).unwrap().0.fragment(),
+            "abc"
         );
     }
 }

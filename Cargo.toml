@@ -28,7 +28,11 @@ opt-level = 3
 
 [[bench]]
 harness = false
-name = "jquery_v3-5-1"
+name = "jquery-v3-5-1"
+
+[[bench]]
+harness = false
+name = "react-development-v17-0-1"
 
 [[bench]]
 harness = false
