@@ -21,7 +21,7 @@ fn is_whitespace(c: &char) -> bool {
         | '\u{00a0}'
         // byte order mark
         | '\u{feff}'
-        // unicode space seperators
+        // unicode space separators
         | '\u{2000}'..='\u{200a}' | '\u{3000}'
     )
 }
@@ -184,7 +184,7 @@ where
 /// A semicolon is "automatically inserted" if a newline or the end of the input stream is reached, or the offending token is `"}"`.
 /// See https://es5.github.io/#x7.9 for more information.
 pub fn semi(s: Span) -> ParseResult<()> {
-    value((), tag(";"))(s)
+    value((), char(';'))(s)
 }
 
 /// Prints the stack trace of a `VerboseError` as a `String` to stderr.
