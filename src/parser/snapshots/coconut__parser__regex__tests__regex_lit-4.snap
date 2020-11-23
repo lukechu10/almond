@@ -1,0 +1,10 @@
+---
+source: src/parser/regex.rs
+expression: "parse_literal(r#\"/[^/]*$/\"#.into()).unwrap().1"
+---
+{
+  "type": "Literal",
+  "value": "/[^/]*$/",
+  "start": 0,
+  "end": 8
+}

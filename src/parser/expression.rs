@@ -45,9 +45,10 @@ pub fn parse_primary_expr_allow_reserved(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_this_expr(s: Span) -> ParseResult<Node> {
-    map(spanned(ws0(tag("this"))), |(_, start, end)| {
-        NodeKind::ThisExpression.with_pos(start, end)
-    })(s)
+    map(
+        spanned(ws0(pair(tag("this"), not(identifier_continue)))),
+        |(_, start, end)| NodeKind::ThisExpression.with_pos(start, end),
+    )(s)
 }
 
 pub fn parse_paren_expr(s: Span) -> ParseResult<Node> {

@@ -17,9 +17,10 @@ pub fn parse_literal(s: Span) -> ParseResult<Node> {
 }
 
 pub fn null_lit(s: Span) -> ParseResult<Node> {
-    map(spanned(tag("null")), |(_, start, end)| {
-        LiteralValue::Null.into_node_kind().with_pos(start, end)
-    })(s)
+    map(
+        spanned(pair(tag("null"), not(identifier_continue))),
+        |(_, start, end)| LiteralValue::Null.into_node_kind().with_pos(start, end),
+    )(s)
 }
 
 pub fn bool_lit(s: Span) -> ParseResult<Node> {
@@ -77,6 +78,8 @@ fn character_double_quote(s: Span) -> ParseResult<char> {
                     'n' => '\n',
                     'r' => '\r',
                     't' => '\t',
+                    // vertical tab
+                    'v' => '\x0b',
                     '0' => '\0',
                     _ => return Err(()),
                 })
@@ -101,6 +104,8 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
                     'n' => '\n',
                     'r' => '\r',
                     't' => '\t',
+                    // vertical tab
+                    'v' => '\x0b',
                     '0' => '\0',
                     _ => return Err(()),
                 })

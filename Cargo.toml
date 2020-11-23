@@ -36,4 +36,8 @@ name = "react-development-v17-0-1"
 
 [[bench]]
 harness = false
+name = "angular-v1-8-0"
+
+[[bench]]
+harness = false
 name = "fibonacci"

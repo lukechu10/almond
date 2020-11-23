@@ -3,14 +3,25 @@
 use crate::ast::*;
 use crate::parser::*;
 
+fn escaped_regex_body(s: Span) -> ParseResult<Span> {
+    recognize(preceded(char('\\'), one_of("\\/[]")))(s)
+}
+
+fn regex_class(s: Span) -> ParseResult<Span> {
+    delimited(char('['), take_until("]"), char(']'))(s)
+}
+
+fn regex_char(s: Span) -> ParseResult<Span> {
+    recognize(none_of("/"))(s)
+}
+
 fn regex_body(s: Span) -> ParseResult<String> {
-    let escaped_regex_body = preceded(char('\\'), alt((char('\\'), char('/'))));
     fold_many0(
-        alt((escaped_regex_body, none_of("/"))),
+        alt((escaped_regex_body, regex_class, regex_char)),
         format!(""),
-        |mut body: String, regex_char| {
-            body.push(regex_char);
-            body
+        |mut string: String, s| {
+            string.push_str(*s);
+            string
         },
     )(s)
 }
@@ -52,5 +63,6 @@ mod tests {
         assert_json_snapshot!(parse_literal("/abc/g".into()).unwrap().1);
         assert_json_snapshot!(parse_literal(r#"/abc\\/g"#.into()).unwrap().1);
         assert_json_snapshot!(parse_literal(r#"/\\\//g"#.into()).unwrap().1);
+        assert_json_snapshot!(parse_literal(r#"/[^/]*$/"#.into()).unwrap().1);
     }
 }
