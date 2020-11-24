@@ -28,8 +28,13 @@ jobs:
           clean: false # Do not remove bench from base branch
 
       - name: Run cargo bench on head
-        run: echo "::set-output name=result::$(cargo bench 2>&1)\n"
-        id: bench_head
+        run: cargo bench &> bench.txt
+      
+      - name: "Read file contents"
+        id: read_bench
+        uses: andstor/file-reader-action@v1
+        with:
+          path: "bench.txt"
 
       - name: Comment on PR
         uses: unsplash/comment-on-pr@master
@@ -42,7 +47,7 @@ jobs:
               <summary>Benchmark Results</summary>
 
               ```
-              ${{ steps.bench_head.outputs.result }}
+              ${{ steps.read_bench.outputs.contents }}
               ```
             </details>
           check_for_duplicate_msg: true
