@@ -1,10 +1,10 @@
 ---
 source: src/parser/expression.rs
-expression: "parse_expr(\"x /= x * x\".into()).unwrap().1"
+expression: "parse_expr(\"x ** y ** z\".into()).unwrap().1"
 ---
 {
-  "type": "AssignmentExpression",
-  "operator": "/=",
+  "type": "BinaryExpression",
+  "operator": "**",
   "left": {
     "type": "Identifier",
     "name": "x",
@@ -13,22 +13,22 @@ expression: "parse_expr(\"x /= x * x\".into()).unwrap().1"
   },
   "right": {
     "type": "BinaryExpression",
-    "operator": "*",
+    "operator": "**",
     "left": {
       "type": "Identifier",
-      "name": "x",
+      "name": "y",
       "start": 5,
       "end": 6
     },
     "right": {
       "type": "Identifier",
-      "name": "x",
-      "start": 9,
-      "end": 10
+      "name": "z",
+      "start": 10,
+      "end": 11
     },
     "start": 5,
-    "end": 10
+    "end": 11
   },
   "start": 0,
-  "end": 10
+  "end": 11
 }

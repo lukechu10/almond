@@ -142,6 +142,8 @@ pub enum BinaryOperator {
     SignedRightShift,
     /// `>>>`
     ZeroFillRightShift,
+    /// `**`
+    Exponentiation,
     Plus,
     Minus,
     Asterisk,
@@ -172,6 +174,7 @@ impl Serialize for BinaryOperator {
             BinaryOperator::ZeroFillRightShift => ">>>",
             BinaryOperator::Plus => "+",
             BinaryOperator::Minus => "-",
+            BinaryOperator::Exponentiation => "**",
             BinaryOperator::Asterisk => "*",
             BinaryOperator::Slash => "/",
             BinaryOperator::Percent => "%",
@@ -192,6 +195,7 @@ pub enum AssignmentOperator {
     Equals,
     PlusEquals,
     MinusEquals,
+    ExponentEquals,
     AsteriskEquals,
     SlashEquals,
     PercentEquals,
@@ -217,6 +221,7 @@ impl Serialize for AssignmentOperator {
             AssignmentOperator::Equals => "=",
             AssignmentOperator::PlusEquals => "+=",
             AssignmentOperator::MinusEquals => "-=",
+            AssignmentOperator::ExponentEquals => "**=",
             AssignmentOperator::AsteriskEquals => "*=",
             AssignmentOperator::SlashEquals => "/=",
             AssignmentOperator::PercentEquals => "%=",

@@ -1,46 +1,34 @@
 ---
 source: src/parser/expression.rs
-expression: "parse_expr(r#\"identifier = \"(?:\\\\\\\\[\\\\da-fA-F]{1,6}\" + whitespace +\n\t\t\t\t\"?|\\\\\\\\[^\\\\r\\\\n\\\\f]|[\\\\w-]|[^\\0-\\\\x7f])+\"\"#.into()).unwrap().1"
+expression: "parse_expr(\"x[\\\"foo\\\"] = a\".into()).unwrap().1"
 ---
 {
   "type": "AssignmentExpression",
   "operator": "=",
   "left": {
-    "type": "Identifier",
-    "name": "identifier",
+    "type": "MemberExpression",
+    "object": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 0,
+      "end": 1
+    },
+    "property": {
+      "type": "Literal",
+      "value": "foo",
+      "start": 2,
+      "end": 7
+    },
+    "computed": true,
     "start": 0,
-    "end": 10
+    "end": 8
   },
   "right": {
-    "type": "BinaryExpression",
-    "operator": "+",
-    "left": {
-      "type": "BinaryExpression",
-      "operator": "+",
-      "left": {
-        "type": "Literal",
-        "value": "(?:\\\\[\\da-fA-F]{1,6}",
-        "start": 13,
-        "end": 38
-      },
-      "right": {
-        "type": "Identifier",
-        "name": "whitespace",
-        "start": 41,
-        "end": 51
-      },
-      "start": 13,
-      "end": 51
-    },
-    "right": {
-      "type": "Literal",
-      "value": "?|\\\\[^\\r\\n\\f]|[\\w-]|[^\u0000-\\x7f])+",
-      "start": 58,
-      "end": 99
-    },
-    "start": 13,
-    "end": 99
+    "type": "Identifier",
+    "name": "a",
+    "start": 11,
+    "end": 12
   },
   "start": 0,
-  "end": 99
+  "end": 12
 }

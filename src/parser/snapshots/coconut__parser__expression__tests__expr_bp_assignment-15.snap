@@ -1,10 +1,10 @@
 ---
 source: src/parser/expression.rs
-expression: "parse_expr(\"x <<= 1\".into()).unwrap().1"
+expression: "parse_expr(\"x %= x * x\".into()).unwrap().1"
 ---
 {
   "type": "AssignmentExpression",
-  "operator": "<<=",
+  "operator": "%=",
   "left": {
     "type": "Identifier",
     "name": "x",
@@ -12,11 +12,23 @@ expression: "parse_expr(\"x <<= 1\".into()).unwrap().1"
     "end": 1
   },
   "right": {
-    "type": "Literal",
-    "value": 1.0,
-    "start": 6,
-    "end": 7
+    "type": "BinaryExpression",
+    "operator": "*",
+    "left": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 5,
+      "end": 6
+    },
+    "right": {
+      "type": "Identifier",
+      "name": "x",
+      "start": 9,
+      "end": 10
+    },
+    "start": 5,
+    "end": 10
   },
   "start": 0,
-  "end": 7
+  "end": 10
 }

@@ -1,10 +1,10 @@
 ---
 source: src/parser/expression.rs
-expression: "parse_expr(\"x **= y\".into()).unwrap().1"
+expression: "parse_expr(\"x ** y\".into()).unwrap().1"
 ---
 {
-  "type": "AssignmentExpression",
-  "operator": "**=",
+  "type": "BinaryExpression",
+  "operator": "**",
   "left": {
     "type": "Identifier",
     "name": "x",
@@ -14,9 +14,9 @@ expression: "parse_expr(\"x **= y\".into()).unwrap().1"
   "right": {
     "type": "Identifier",
     "name": "y",
-    "start": 6,
-    "end": 7
+    "start": 5,
+    "end": 6
   },
   "start": 0,
-  "end": 7
+  "end": 6
 }

@@ -396,6 +396,10 @@ mod tests {
         // logical
         assert_json_snapshot!(parse_expr("x && y".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x || y".into()).unwrap().1);
+
+        // exponentiation (right associative)
+        assert_json_snapshot!("exponentiation", parse_expr("x ** y".into()).unwrap().1);
+        assert_json_snapshot!("exponentiation-2", parse_expr("x ** y ** z".into()).unwrap().1);
     }
 
     #[test]
@@ -452,6 +456,7 @@ mod tests {
         assert_json_snapshot!(parse_expr("a = b = c;".into()).unwrap().1);
 
         assert_json_snapshot!(parse_expr("x -= x * x".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("x **= y".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x *= x * x".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x /= x * x".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("x %= x * x".into()).unwrap().1);
