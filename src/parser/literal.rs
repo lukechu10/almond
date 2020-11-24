@@ -70,6 +70,7 @@ fn character_double_quote(s: Span) -> ParseResult<char> {
     let (input, c) = none_of("\"")(s)?;
     if c == '\\' {
         alt((
+            preceded(char('u'), unicode_esc_seq),
             map_res(anychar, |c| {
                 Ok(match c {
                     '\'' | '"' | '\\' | '/' => c,
@@ -87,7 +88,6 @@ fn character_double_quote(s: Span) -> ParseResult<char> {
                     _ => return Err(()),
                 })
             }),
-            preceded(char('u'), unicode_esc_seq),
         ))(input)
     } else {
         Ok((input, c))
@@ -99,6 +99,7 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
     let (input, c) = none_of("\'")(s)?;
     if c == '\\' {
         alt((
+            preceded(char('u'), unicode_esc_seq),
             map_res(anychar, |c| {
                 Ok(match c {
                     '\'' | '"' | '\\' | '/' => c,
@@ -116,7 +117,6 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
                     _ => return Err(()),
                 })
             }),
-            preceded(char('u'), unicode_esc_seq),
         ))(input)
     } else {
         Ok((input, c))
