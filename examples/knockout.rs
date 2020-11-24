@@ -1,8 +1,8 @@
-//! Parse Angular development 17.0.1
+//! Parse Knockout debug 3.5.1
 
 fn main() {
     use coconut::parser::parse_program;
-    let program_str = include_str!("../benches/js/angular-1.8.0.js");
+    let program_str = include_str!("../benches/js/knockout-3.5.1.js");
     match parse_program(program_str.into()) {
         Err(nom::Err::Error(e)) | Err(nom::Err::Failure(e)) => {
             coconut::parser::verbose_trace_dbg(program_str, e)

@@ -81,6 +81,9 @@ fn character_double_quote(s: Span) -> ParseResult<char> {
                     // vertical tab
                     'v' => '\x0b',
                     '0' => '\0',
+                    _ => c,
+                    #[allow(unreachable_patterns)]
+                    // Only for type inference purposes. Case on top should catch all cases.
                     _ => return Err(()),
                 })
             }),
@@ -107,6 +110,9 @@ fn character_single_quote(s: Span) -> ParseResult<char> {
                     // vertical tab
                     'v' => '\x0b',
                     '0' => '\0',
+                    _ => c,
+                    #[allow(unreachable_patterns)]
+                    // Only for type inference purposes. Case on top should catch all cases.
                     _ => return Err(()),
                 })
             }),

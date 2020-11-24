@@ -33,7 +33,7 @@ pub fn parse_block(s: Span) -> ParseResult<Node> {
 }
 
 pub fn parse_stmt_list(s: Span) -> ParseResult<Vec<Node>> {
-    many0(parse_stmt)(s)
+    many0(parse_source_elem)(s)
 }
 
 fn parse_initializer(s: Span) -> ParseResult<Node> {
