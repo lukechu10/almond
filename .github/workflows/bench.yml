@@ -28,4 +28,22 @@ jobs:
           clean: false # Do not remove bench from base branch
 
       - name: Run cargo bench on head
-        run: cargo bench
+        run: echo "::set-output name=result::`cargo bench`"
+        shell: bash
+        id: bench_head
+
+      - name: Comment on PR
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: |
+            Comparing base (`${{ github.base_ref }}` with HEAD (`${{ github.head_ref }}`).
+            <details>
+              <summary>Benchmark Results</summary>
+
+              ```
+              ${{ steps.bench_head.outputs.result }}
+              ```
+            </details>
+          check_for_duplicate_msg: true
