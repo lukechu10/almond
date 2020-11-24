@@ -28,7 +28,7 @@ jobs:
           clean: false # Do not remove bench from base branch
 
       - name: Run cargo bench on head
-        run: echo "::set-output name=result::$(cargo bench)\n"
+        run: echo "::set-output name=result::$(cargo bench 2>&1)\n"
         id: bench_head
 
       - name: Comment on PR
