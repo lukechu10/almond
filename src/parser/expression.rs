@@ -20,9 +20,9 @@ pub fn parse_expr_no_seq(s: Span) -> ParseResult<Node> {
 // expression, an expression started by a keyword like `function`.
 pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
     alt((
-        parse_this_expr,
         parse_identifier,
         literal::parse_literal,
+        parse_this_expr,
         parse_function_expr,
         parse_paren_expr,
     ))(s)
@@ -36,9 +36,9 @@ pub fn parse_primary_expr(s: Span) -> ParseResult<Node> {
 /// http://www.ecma-international.org/ecma-262/#sec-property-accessors
 pub fn parse_primary_expr_allow_reserved(s: Span) -> ParseResult<Node> {
     alt((
-        parse_this_expr,
         parse_identifier_name, // note that this is different from `parse_identifier` which does not allow reserved name.
         literal::parse_literal,
+        parse_this_expr,
         parse_function_expr,
         parse_paren_expr,
     ))(s)
@@ -147,7 +147,7 @@ pub fn parse_expr_bp(s: Span, min_bp: i32, allow_reserved: bool) -> ParseResult<
                 break;
             }
             s = s_tmp;
-            let start = lhs.clone().start;
+            let start = lhs.start.clone();
 
             let node_kind = match postfix_op {
                 PostfixOperator::Update(postfix_op) => NodeKind::UpdateExpression {
@@ -220,8 +220,8 @@ pub fn parse_expr_bp(s: Span, min_bp: i32, allow_reserved: bool) -> ParseResult<
             let (s_tmp, rhs) = parse_expr_bp(s, right_bp, false)?;
             s = s_tmp;
 
-            let start = lhs.clone().start;
-            let end = rhs.clone().end;
+            let start = lhs.start.clone();
+            let end = rhs.end.clone();
 
             let node_kind = NodeKind::ConditionalExpression {
                 test: Box::new(lhs),
@@ -236,8 +236,8 @@ pub fn parse_expr_bp(s: Span, min_bp: i32, allow_reserved: bool) -> ParseResult<
         let (s_tmp, rhs) = parse_expr_bp(s, right_bp, op == InfixOperator::DotOperator)?;
         s = s_tmp;
 
-        let start = lhs.clone().start;
-        let end = rhs.clone().end;
+        let start = lhs.start.clone();
+        let end = rhs.end.clone();
 
         let node_kind = match op {
             InfixOperator::Binary(op) => NodeKind::BinaryExpression {
