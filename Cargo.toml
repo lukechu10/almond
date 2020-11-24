@@ -1,7 +1,14 @@
 [package]
 authors = ["Luke Chu <lukewchu@outlook.com>"]
+categories = ["parsing"]
+description = "A new, fast, and general purpose JavaScript parser written in Rust that generates ESTree compatible abstract syntax trees"
 edition = "2018"
+homepage = "https://github.com/lukechu10/coconut"
+keywords = ["javascript", "parser"]
+license = "MIT OR Apache-2.0"
 name = "coconut"
+readme = "README.md"
+repository = "https://github.com/lukechu10/coconut"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
