@@ -4,7 +4,8 @@ use crate::parser::*;
 use nom::{IResult, Offset, Parser, Slice};
 use nom_locate::position;
 
-pub type JsParseError<'a> = nom::error::VerboseError<Span<'a>>;
+// pub type JsParseError<'a> = nom::error::VerboseError<Span<'a>>;
+pub type JsParseError<'a> = nom::error::Error<Span<'a>>;
 pub type Span<'a> = nom_locate::LocatedSpan<&'a str>;
 pub type ParseResult<'a, T> = IResult<Span<'a>, T, JsParseError<'a>>;
 
@@ -187,16 +188,18 @@ pub fn semi(s: Span) -> ParseResult<()> {
     value((), char(';'))(s)
 }
 
-/// Prints the stack trace of a `VerboseError` as a `String` to stderr.
-pub fn verbose_trace_dbg(input: &str, err: JsParseError) {
-    let err = nom::error::VerboseError {
-        errors: err
-            .errors
-            .iter()
-            .map(|e| (*e.0.fragment(), e.1.clone()))
-            .collect(),
-    };
-    eprintln!("{}", nom::error::convert_error(input, err));
+/// Prints the stack trace of a `VerboseError` as a `String` to stderr. DOes nothing if `err` is not an instance of `VerboseError`.
+pub fn verbose_trace_dbg(input: &str, err: &dyn std::any::Any) {
+    if let Some(err) = err.downcast_ref::<nom::error::VerboseError<Span>>() {
+        let err = nom::error::VerboseError {
+            errors: err
+                .errors
+                .iter()
+                .map(|e| (*e.0.fragment(), e.1.clone()))
+                .collect(),
+        };
+        eprintln!("{}", nom::error::convert_error(input, err));
+    }
 }
 
 #[cfg(test)]
