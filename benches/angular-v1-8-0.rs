@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 fn f() {
-    use coconut::parser::parse_program;
+    use almond::parser::parse_program;
     let program_str = include_str!("./js/angular-1.8.0.js");
     parse_program(program_str.into()).unwrap().1;
 }
