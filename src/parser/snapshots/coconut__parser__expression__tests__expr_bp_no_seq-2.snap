@@ -38,6 +38,7 @@ expression: "parse_expr_no_seq(\"test() ? function () { return 0; } : function()
       "start": 21,
       "end": 34
     },
+    "async": false,
     "start": 9,
     "end": 34
   },
@@ -63,6 +64,7 @@ expression: "parse_expr_no_seq(\"test() ? function () { return 0; } : function()
       "start": 48,
       "end": 61
     },
+    "async": false,
     "start": 37,
     "end": 61
   },

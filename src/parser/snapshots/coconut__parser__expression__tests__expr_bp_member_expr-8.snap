@@ -102,6 +102,7 @@ expression: "parse_expr(r#\"test\n                    .then(fn)\n               
         "start": 153,
         "end": 222
       },
+      "async": false,
       "start": 136,
       "end": 222
     }

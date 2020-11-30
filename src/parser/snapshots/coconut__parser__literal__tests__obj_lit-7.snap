@@ -49,6 +49,7 @@ expression: "parse_literal(r#\"{\n                    get: test() ? function () 
             "start": 48,
             "end": 105
           },
+          "async": false,
           "start": 36,
           "end": 105
         },
@@ -74,6 +75,7 @@ expression: "parse_literal(r#\"{\n                    get: test() ? function () 
             "start": 120,
             "end": 177
           },
+          "async": false,
           "start": 108,
           "end": 177
         },

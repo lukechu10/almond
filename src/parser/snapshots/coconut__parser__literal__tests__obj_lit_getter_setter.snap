@@ -35,6 +35,7 @@ expression: "parse_literal(r#\"{\n                    get a() {\n               
           "start": 30,
           "end": 80
         },
+        "async": false,
         "start": 27,
         "end": 80
       },
@@ -79,6 +80,7 @@ expression: "parse_literal(r#\"{\n                    get a() {\n               
           "start": 111,
           "end": 161
         },
+        "async": false,
         "start": 107,
         "end": 161
       },

@@ -47,6 +47,7 @@ expression: "parse_expr(\"x = a ? myFunc : function () { return c; }\".into()).u
         "start": 29,
         "end": 42
       },
+      "async": false,
       "start": 17,
       "end": 42
     },
