@@ -1,6 +1,6 @@
 ---
 source: src/parser/expression.rs
-expression: "parse_expr_bp(\"myIdentifier in foo\".into(), 25).unwrap().1"
+expression: "parse_expr_bp(\"myIdentifier in foo\".into(), 25, false).unwrap().1"
 ---
 {
   "type": "Identifier",

@@ -1,6 +1,6 @@
 ---
 source: src/parser/statement.rs
-expression: "parse_stmt(\"; \".into()).unwrap().1"
+expression: "parse_stmt(\";\\t\".into()).unwrap().1"
 ---
 {
   "type": "EmptyStatement",
