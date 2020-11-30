@@ -21,7 +21,7 @@ pub use regex::*;
 pub use statement::*;
 pub use util::*;
 
-pub(crate) use nom::{
+use nom::{
     branch::alt, bytes::complete::*, character::complete::*, combinator::*, error::context,
     multi::*, number::complete::*, sequence::*,
 };

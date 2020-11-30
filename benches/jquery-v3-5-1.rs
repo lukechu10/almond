@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 fn f() {
-    use almond::parser::parse_program;
+    use almond::parse_program;
     let program_str = include_str!("./js/jquery-3.5.1.js");
     parse_program(program_str.into()).unwrap().1;
 }
