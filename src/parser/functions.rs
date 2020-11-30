@@ -26,7 +26,11 @@ pub fn parse_declaration(s: Span) -> ParseResult<Node> {
 
 pub fn parse_function_declaration(s: Span) -> ParseResult<Node> {
     let parse_function_declaration_signature = pair(
-        preceded(ws1(keyword_function), parse_identifier),
+        separated_pair(
+            ws0(opt(keyword_async)),
+            ws1(keyword_function),
+            parse_identifier,
+        ),
         delimited(ws0(tag("(")), parse_formal_param_list, ws0(tag(")"))),
     );
 
@@ -37,12 +41,13 @@ pub fn parse_function_declaration(s: Span) -> ParseResult<Node> {
                 parse_function_declaration_signature,
                 parse_function_body,
             )),
-            |(((id, params), body), start, end)| {
+            |((((is_async, id), params), body), start, end)| {
                 NodeKind::FunctionDeclaration {
                     function: Function {
                         id: Box::new(Some(id)),
                         params,
                         body: Box::new(body),
+                        is_async: is_async.is_some(),
                     },
                 }
                 .with_pos(start, end)
@@ -53,7 +58,11 @@ pub fn parse_function_declaration(s: Span) -> ParseResult<Node> {
 
 pub fn parse_function_expr(s: Span) -> ParseResult<Node> {
     let parse_function_expr_signature = pair(
-        preceded(ws0(keyword_function), opt(parse_identifier)),
+        separated_pair(
+            ws0(opt(keyword_async)),
+            ws0(keyword_function),
+            opt(parse_identifier),
+        ),
         delimited(ws0(tag("(")), parse_formal_param_list, ws0(tag(")"))),
     );
 
@@ -61,12 +70,13 @@ pub fn parse_function_expr(s: Span) -> ParseResult<Node> {
         "function expression",
         map(
             spanned(pair(parse_function_expr_signature, parse_function_body)),
-            |(((id, params), body), start, end)| {
+            |((((is_async, id), params), body), start, end)| {
                 NodeKind::FunctionExpression {
                     function: Function {
                         id: Box::new(id),
                         params,
                         body: Box::new(body),
+                        is_async: is_async.is_some(),
                     },
                 }
                 .with_pos(start, end)
@@ -93,13 +103,16 @@ pub fn parse_function_body_inner(s: Span) -> ParseResult<Vec<Node>> {
     let parse_directive_list = many0(parse_directive);
     let parse_source_element_list = many0(parse_source_elem);
 
-    context("function body inner", map(
-        pair(parse_directive_list, parse_source_element_list),
-        |(mut directives, stmts)| {
-            directives.extend(stmts);
-            directives
-        },
-    ))(s)
+    context(
+        "function body inner",
+        map(
+            pair(parse_directive_list, parse_source_element_list),
+            |(mut directives, stmts)| {
+                directives.extend(stmts);
+                directives
+            },
+        ),
+    )(s)
 }
 
 pub fn parse_formal_param_list(s: Span) -> ParseResult<Vec<Node>> {
@@ -376,6 +389,20 @@ mod tests {
                             (global = global || self, factory(global.Library = {}));
                 }(this, (function (exports) {})));"#
                     .into()
+            )
+            .unwrap()
+            .1
+        );
+    }
+
+    #[test]
+    fn test_async_function() {
+        assert_json_snapshot!(
+            parse_program(
+                r#"async function foo(callback) {
+                    await test();
+                }"#
+                .into()
             )
             .unwrap()
             .1

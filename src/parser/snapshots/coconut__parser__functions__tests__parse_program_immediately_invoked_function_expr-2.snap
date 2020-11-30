@@ -284,6 +284,7 @@ expression: "parse_program(r#\"(function (global, factory) {\n                  
             "start": 28,
             "end": 334
           },
+          "async": false,
           "start": 1,
           "end": 334
         },
@@ -310,6 +311,7 @@ expression: "parse_program(r#\"(function (global, factory) {\n                  
               "start": 361,
               "end": 363
             },
+            "async": false,
             "start": 342,
             "end": 363
           }

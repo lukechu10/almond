@@ -159,6 +159,7 @@ expression: "parse_function_declaration(r#\"function fib() {\n                  
     "start": 15,
     "end": 182
   },
+  "async": false,
   "start": 0,
   "end": 182
 }

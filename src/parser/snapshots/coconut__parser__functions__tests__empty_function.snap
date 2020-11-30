@@ -27,6 +27,7 @@ expression: "parse_program(r#\"function foo(callback) {\n                    // 
         "start": 23,
         "end": 72
       },
+      "async": false,
       "start": 0,
       "end": 72
     }

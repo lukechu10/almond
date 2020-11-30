@@ -33,6 +33,7 @@ expression: "parse_expr(\"myFunc = function () { return 0; }\".into()).unwrap().
       "start": 21,
       "end": 34
     },
+    "async": false,
     "start": 9,
     "end": 34
   },

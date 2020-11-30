@@ -31,6 +31,7 @@ expression: "parse_program(r#\"(function () {\n                    123; // somet
             "start": 13,
             "end": 70
           },
+          "async": false,
           "start": 1,
           "end": 70
         },

@@ -12,7 +12,7 @@ Some obscure syntax might not parse correctly yet. If you find a bug, please con
 - [x] ES5
 - [ ] ES2015 (ES6)
 - [x] ES2016 (ES7)
-- [ ] ES2017
+- [x] ES2017
 - [ ] ES2018
 - [ ] ES2019
 - [ ] ES2020

@@ -215,6 +215,7 @@ fn parse_property_assignment(s: Span) -> ParseResult<Node> {
                             body: Box::new(body),
                             id: Box::new(None),
                             params: Vec::new(),
+                            is_async: false, // async is incompatible with get
                         },
                     }
                     .with_pos(start_func, end_func),
@@ -244,6 +245,7 @@ fn parse_property_assignment(s: Span) -> ParseResult<Node> {
                             body: Box::new(body),
                             id: Box::new(None),
                             params: vec![param],
+                            is_async: false, // async is incompatible with set
                         },
                     }
                     .with_pos(start_func, end_func),
