@@ -162,6 +162,7 @@ expression: "parse_program(r#\"\n                function fib() {\n             
         "start": 32,
         "end": 199
       },
+      "async": false,
       "start": 17,
       "end": 199
     },

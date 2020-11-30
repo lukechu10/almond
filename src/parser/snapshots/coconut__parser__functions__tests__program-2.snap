@@ -76,6 +76,7 @@ expression: "parse_program(r#\"var x = 1;\n                function foo() {\n   
         "start": 42,
         "end": 146
       },
+      "async": false,
       "start": 27,
       "end": 146
     }

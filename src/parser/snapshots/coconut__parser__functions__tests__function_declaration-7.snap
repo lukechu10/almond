@@ -20,6 +20,7 @@ expression: "parse_program(r#\"function foo() {\n                    // stuff\n 
         "start": 15,
         "end": 63
       },
+      "async": false,
       "start": 0,
       "end": 63
     },

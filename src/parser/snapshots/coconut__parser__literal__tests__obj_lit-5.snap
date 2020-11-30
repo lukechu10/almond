@@ -35,6 +35,7 @@ expression: "parse_literal(r#\"{\n                    test: function () {\n     
           "start": 40,
           "end": 98
         },
+        "async": false,
         "start": 28,
         "end": 98
       },

@@ -49,6 +49,7 @@ expression: "parse_program(r#\"function foo() {\n                    test;\n    
         "start": 15,
         "end": 149
       },
+      "async": false,
       "start": 0,
       "end": 149
     }

@@ -56,6 +56,7 @@ pub fn parse_future_reserved_word_lax(s: Span) -> ParseResult<()> {
         keyword_const,
         keyword_export,
         keyword_import,
+        keyword_await,
     )))(s)
 }
 
@@ -209,4 +210,11 @@ pub fn keyword_static(s: Span) -> ParseResult<()> {
 }
 pub fn keyword_yield(s: Span) -> ParseResult<()> {
     value((), pair(tag("yield"), not(identifier_continue)))(s)
+}
+// es2017
+pub fn keyword_async(s: Span) -> ParseResult<()> {
+    value((), pair(tag("async"), not(identifier_continue)))(s)
+}
+pub fn keyword_await(s: Span) -> ParseResult<()> {
+    value((), pair(tag("await"), not(identifier_continue)))(s)
 }
