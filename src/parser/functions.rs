@@ -3,7 +3,7 @@
 use crate::ast::*;
 use crate::parser::util::*;
 use crate::parser::*;
-use nom::InputLength;
+// use nom::InputLength;
 use nom_locate::position;
 
 /// Parses a complete JS program
@@ -12,9 +12,9 @@ pub fn parse_program(s: Span) -> ParseResult<Node> {
     let (s, _) = sp0(s)?; // eat all preceding whitespace
 
     let (s, body) = parse_function_body_inner(s)?;
-    if s.input_len() != 0 {
-        panic!("The source code was not completely parsed. This is a bug with the parser.\nUnparsed code starting on line {}", s.location_line());
-    }
+    // if s.input_len() != 0 {
+    //     panic!("The source code was not completely parsed. This is a bug with the parser.\nUnparsed code starting on line {}", s.location_line());
+    // }
 
     let (s, end) = position(s)?; // Program loc should include all trailing whitespace
     Ok((s, NodeKind::Program { body }.with_pos(start, end)))
