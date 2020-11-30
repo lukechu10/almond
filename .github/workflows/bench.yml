@@ -25,6 +25,29 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.head_ref }}
+          clean: false # Do not remove bench from base branch
 
       - name: Run cargo bench on head
-        run: cargo bench
+        run: cargo bench &> bench.txt
+      
+      - name: "Read file contents"
+        id: read_bench
+        uses: andstor/file-reader-action@v1
+        with:
+          path: "bench.txt"
+
+      - name: Comment on PR
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: |
+            Comparing base (`${{ github.base_ref }}` with HEAD (`${{ github.head_ref }}`).
+            <details>
+              <summary>Benchmark Results</summary>
+
+              ```
+              ${{ steps.read_bench.outputs.contents }}
+              ```
+            </details>
+          check_for_duplicate_msg: true
