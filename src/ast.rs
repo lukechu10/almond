@@ -40,10 +40,11 @@ pub struct Function<'a> {
 pub enum VariableDeclarationKind {
     Var,
 }
+
 impl Serialize for VariableDeclarationKind {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             VariableDeclarationKind::Var => "var",
@@ -60,10 +61,11 @@ pub enum PropertyKind {
     Get,
     Set,
 }
+
 impl Serialize for PropertyKind {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             PropertyKind::Init => "init",
@@ -86,10 +88,11 @@ pub enum UnaryOperator {
     Void,
     Delete,
 }
+
 impl Serialize for UnaryOperator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             UnaryOperator::Minus => "-",
@@ -111,10 +114,11 @@ pub enum UpdateOperator {
     Increment,
     Decrement,
 }
+
 impl Serialize for UpdateOperator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             UpdateOperator::Increment => "++",
@@ -155,10 +159,11 @@ pub enum BinaryOperator {
     In,
     Instanceof,
 }
+
 impl Serialize for BinaryOperator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             BinaryOperator::EqualsEquals => "==",
@@ -212,10 +217,11 @@ pub enum AssignmentOperator {
     /// `&=`
     BitwiseAndEquals,
 }
+
 impl Serialize for AssignmentOperator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             AssignmentOperator::Equals => "=",
@@ -243,10 +249,11 @@ pub enum LogicalOperator {
     LogicalOr,
     LogicalAnd,
 }
+
 impl Serialize for LogicalOperator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let s = match self {
             LogicalOperator::LogicalOr => "||",
@@ -573,6 +580,7 @@ pub enum NodeKind<'a> {
     /// An error node. Should be used when source is not syntaxically correct.
     Error,
 }
+
 impl<'a> NodeKind<'a> {
     /// Creates a `Node` from `NodeKind` with specified `pos`.
     pub fn with_pos(
@@ -599,8 +607,8 @@ pub struct Node<'a> {
 }
 
 fn serialize_span<S>(pos: &crate::parser::Span, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
+    where
+        S: Serializer,
 {
     serializer.serialize_u64(pos.location_offset() as u64)
 }
