@@ -1,0 +1,60 @@
+---
+source: src/parser/functions.rs
+expression: "parse_program(r#\"async function foo(callback) {\n                    await test();\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "start": 15,
+        "end": 18
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "callback",
+          "start": 19,
+          "end": 27
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AwaitExpression",
+              "argument": {
+                "type": "CallExpression",
+                "callee": {
+                  "type": "Identifier",
+                  "name": "test",
+                  "start": 57,
+                  "end": 61
+                },
+                "arguments": [],
+                "start": 57,
+                "end": 63
+              },
+              "start": 51,
+              "end": 63
+            },
+            "start": 51,
+            "end": 64
+          }
+        ],
+        "start": 29,
+        "end": 82
+      },
+      "async": true,
+      "start": 0,
+      "end": 82
+    }
+  ],
+  "start": 0,
+  "end": 82
+}

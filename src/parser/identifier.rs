@@ -20,6 +20,9 @@ pub fn identifier_unicode_esc_sequence(s: Span) -> ParseResult<char> {
 
 pub fn identifier_start(s: Span) -> ParseResult<char> {
     verify(alt((identifier_unicode_esc_sequence, anychar)), |c: &char| match c {
+        // These are already matched by is_xid_start but are explicitly at the beginning for performance reasons.
+        'a'..='z' => true,
+        'A'..='Z' => true,
         c if unicode_xid::UnicodeXID::is_xid_start(*c) => true,
         '$' | '_' => true,
         _ => false,
@@ -28,6 +31,9 @@ pub fn identifier_start(s: Span) -> ParseResult<char> {
 
 pub fn identifier_continue(s: Span) -> ParseResult<char> {
     verify(alt((identifier_unicode_esc_sequence, anychar)), |c: &char| match c {
+        // These are already matched by is_xid_continue but are explicitly at the beginning for performance reasons.
+        'a'..='z' => true,
+        'A'..='Z' => true,
         c if unicode_xid::UnicodeXID::is_xid_continue(*c) => true,
         '$' | '_' => true,
         _ => false,

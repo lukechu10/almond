@@ -291,6 +291,8 @@ pub enum PrefixOperator {
     Update(UpdateOperator),
     /// Eats `new` (does not eat identifier or argument list).
     New,
+    /// `await` expression.
+    Await,
 }
 impl From<UnaryOperator> for PrefixOperator {
     fn from(op: UnaryOperator) -> Self {
@@ -354,6 +356,7 @@ pub fn parse_prefix_operator(s: Span) -> ParseResult<(PrefixOperator, BindingPow
             (UnaryOperator::Delete.into(), BindingPower(-1, 33)),
             keyword_delete,
         ),
+        value((PrefixOperator::Await, BindingPower(-1, 33)), keyword_await),
         // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
         value((PrefixOperator::New, BindingPower(-1, 41)), keyword_new),
     )))(s)

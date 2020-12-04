@@ -34,6 +34,8 @@ pub struct Function<'a> {
     pub params: Vec<Node<'a>>,
     /// `type: FunctionBody`
     pub body: Box<Node<'a>>,
+    #[serde(rename = "async")]
+    pub is_async: bool,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -502,6 +504,11 @@ pub enum NodeKind<'a> {
         /// `type: Expression`
         argument: Box<Node<'a>>,
         prefix: bool,
+    },
+    /// An await expression.
+    AwaitExpression {
+        /// `type: Expression`
+        argument: Box<Node<'a>>,
     },
     /*
     Expressions / Binary operations

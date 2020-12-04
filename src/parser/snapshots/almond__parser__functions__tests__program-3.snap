@@ -1,0 +1,210 @@
+---
+source: src/parser/functions.rs
+expression: "parse_program(r#\"\n                function fib() {\n                    if (x === 0) return 0;\n                    else if (x === 1) return 1;\n                    else return fib(x - 1) + fib(x - 2);\n                }\n                var x = fib(10);\"#.into()).unwrap().1"
+---
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "fib",
+        "start": 26,
+        "end": 29
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "operator": "===",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "start": 58,
+                "end": 59
+              },
+              "right": {
+                "type": "Literal",
+                "value": 0.0,
+                "start": 64,
+                "end": 65
+              },
+              "start": 58,
+              "end": 65
+            },
+            "consequent": {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Literal",
+                "value": 0.0,
+                "start": 74,
+                "end": 75
+              },
+              "start": 67,
+              "end": 76
+            },
+            "alternate": {
+              "type": "IfStatement",
+              "test": {
+                "type": "BinaryExpression",
+                "operator": "===",
+                "left": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "start": 106,
+                  "end": 107
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": 1.0,
+                  "start": 112,
+                  "end": 113
+                },
+                "start": 106,
+                "end": 113
+              },
+              "consequent": {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Literal",
+                  "value": 1.0,
+                  "start": 122,
+                  "end": 123
+                },
+                "start": 115,
+                "end": 124
+              },
+              "alternate": {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "fib",
+                      "start": 157,
+                      "end": 160
+                    },
+                    "arguments": [
+                      {
+                        "type": "BinaryExpression",
+                        "operator": "-",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "x",
+                          "start": 161,
+                          "end": 162
+                        },
+                        "right": {
+                          "type": "Literal",
+                          "value": 1.0,
+                          "start": 165,
+                          "end": 166
+                        },
+                        "start": 161,
+                        "end": 166
+                      }
+                    ],
+                    "start": 157,
+                    "end": 167
+                  },
+                  "right": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "fib",
+                      "start": 170,
+                      "end": 173
+                    },
+                    "arguments": [
+                      {
+                        "type": "BinaryExpression",
+                        "operator": "-",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "x",
+                          "start": 174,
+                          "end": 175
+                        },
+                        "right": {
+                          "type": "Literal",
+                          "value": 2.0,
+                          "start": 178,
+                          "end": 179
+                        },
+                        "start": 174,
+                        "end": 179
+                      }
+                    ],
+                    "start": 170,
+                    "end": 180
+                  },
+                  "start": 157,
+                  "end": 180
+                },
+                "start": 150,
+                "end": 181
+              },
+              "start": 102,
+              "end": 181
+            },
+            "start": 54,
+            "end": 181
+          }
+        ],
+        "start": 32,
+        "end": 199
+      },
+      "async": false,
+      "start": 17,
+      "end": 199
+    },
+    {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "x",
+            "start": 220,
+            "end": 221
+          },
+          "init": {
+            "type": "CallExpression",
+            "callee": {
+              "type": "Identifier",
+              "name": "fib",
+              "start": 224,
+              "end": 227
+            },
+            "arguments": [
+              {
+                "type": "Literal",
+                "value": 10.0,
+                "start": 228,
+                "end": 230
+              }
+            ],
+            "start": 224,
+            "end": 231
+          },
+          "start": 220,
+          "end": 231
+        }
+      ],
+      "kind": "var",
+      "start": 216,
+      "end": 232
+    }
+  ],
+  "start": 0,
+  "end": 232
+}

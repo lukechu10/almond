@@ -1,0 +1,94 @@
+---
+source: src/parser/literal.rs
+expression: "parse_literal(r#\"{\n                    get a() {\n                        a;\n                    },\n                    set b(x) {\n                        b;\n                    }\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "ObjectExpression",
+  "properties": [
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "a",
+        "start": 26,
+        "end": 27
+      },
+      "value": {
+        "type": "FunctionExpression",
+        "id": null,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "Identifier",
+                "name": "a",
+                "start": 56,
+                "end": 57
+              },
+              "start": 56,
+              "end": 58
+            }
+          ],
+          "start": 30,
+          "end": 80
+        },
+        "async": false,
+        "start": 27,
+        "end": 80
+      },
+      "kind": "get",
+      "start": 22,
+      "end": 80
+    },
+    {
+      "type": "Property",
+      "key": {
+        "type": "Identifier",
+        "name": "b",
+        "start": 106,
+        "end": 107
+      },
+      "value": {
+        "type": "FunctionExpression",
+        "id": null,
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "x",
+            "start": 108,
+            "end": 109
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "Identifier",
+                "name": "b",
+                "start": 137,
+                "end": 138
+              },
+              "start": 137,
+              "end": 139
+            }
+          ],
+          "start": 111,
+          "end": 161
+        },
+        "async": false,
+        "start": 107,
+        "end": 161
+      },
+      "kind": "set",
+      "start": 102,
+      "end": 161
+    }
+  ],
+  "start": 0,
+  "end": 179
+}

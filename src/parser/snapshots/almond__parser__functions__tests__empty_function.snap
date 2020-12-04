@@ -1,0 +1,37 @@
+---
+source: src/parser/functions.rs
+expression: "parse_program(r#\"function foo(callback) {\n                    // A👍a\n                }\"#.into()).unwrap().1"
+---
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "start": 9,
+        "end": 12
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "callback",
+          "start": 13,
+          "end": 21
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "start": 23,
+        "end": 72
+      },
+      "async": false,
+      "start": 0,
+      "end": 72
+    }
+  ],
+  "start": 0,
+  "end": 72
+}

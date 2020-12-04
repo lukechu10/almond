@@ -1,0 +1,112 @@
+---
+source: src/parser/expression.rs
+expression: "parse_expr(r#\"test\n                    .then(fn)\n                    // properties can be reserved words (\"catch\" keyword)\n                    .catch(function (error) {\n                        console.error(error);\n                    });\"#.into()).unwrap().1"
+---
+{
+  "type": "CallExpression",
+  "callee": {
+    "type": "MemberExpression",
+    "object": {
+      "type": "CallExpression",
+      "callee": {
+        "type": "MemberExpression",
+        "object": {
+          "type": "Identifier",
+          "name": "test",
+          "start": 0,
+          "end": 4
+        },
+        "property": {
+          "type": "Identifier",
+          "name": "then",
+          "start": 26,
+          "end": 30
+        },
+        "computed": false,
+        "start": 0,
+        "end": 30
+      },
+      "arguments": [
+        {
+          "type": "Identifier",
+          "name": "fn",
+          "start": 31,
+          "end": 33
+        }
+      ],
+      "start": 0,
+      "end": 34
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "catch",
+      "start": 130,
+      "end": 135
+    },
+    "computed": false,
+    "start": 0,
+    "end": 135
+  },
+  "arguments": [
+    {
+      "type": "FunctionExpression",
+      "id": null,
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "error",
+          "start": 146,
+          "end": 151
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "console",
+                  "start": 179,
+                  "end": 186
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "error",
+                  "start": 187,
+                  "end": 192
+                },
+                "computed": false,
+                "start": 179,
+                "end": 192
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "error",
+                  "start": 193,
+                  "end": 198
+                }
+              ],
+              "start": 179,
+              "end": 199
+            },
+            "start": 179,
+            "end": 200
+          }
+        ],
+        "start": 153,
+        "end": 222
+      },
+      "async": false,
+      "start": 136,
+      "end": 222
+    }
+  ],
+  "start": 0,
+  "end": 223
+}

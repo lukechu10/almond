@@ -1,0 +1,36 @@
+---
+source: src/parser/functions.rs
+expression: "parse_function_declaration(r#\"function a(param1, param2,) {}\"#.into()).unwrap().1"
+---
+{
+  "type": "FunctionDeclaration",
+  "id": {
+    "type": "Identifier",
+    "name": "a",
+    "start": 9,
+    "end": 10
+  },
+  "params": [
+    {
+      "type": "Identifier",
+      "name": "param1",
+      "start": 11,
+      "end": 17
+    },
+    {
+      "type": "Identifier",
+      "name": "param2",
+      "start": 19,
+      "end": 25
+    }
+  ],
+  "body": {
+    "type": "BlockStatement",
+    "body": [],
+    "start": 28,
+    "end": 30
+  },
+  "async": false,
+  "start": 0,
+  "end": 30
+}

@@ -120,6 +120,9 @@ fn parse_prefix_expr(s: Span) -> ParseResult<Node> {
                 arguments: arguments.unwrap_or_default(),
             }
         }
+        PrefixOperator::Await => NodeKind::AwaitExpression {
+            argument: Box::new(rhs),
+        },
     };
     Ok((s, node_kind.with_pos(start, end)))
 }
@@ -399,7 +402,10 @@ mod tests {
 
         // exponentiation (right associative)
         assert_json_snapshot!("exponentiation", parse_expr("x ** y".into()).unwrap().1);
-        assert_json_snapshot!("exponentiation-2", parse_expr("x ** y ** z".into()).unwrap().1);
+        assert_json_snapshot!(
+            "exponentiation-2",
+            parse_expr("x ** y ** z".into()).unwrap().1
+        );
     }
 
     #[test]
@@ -423,6 +429,9 @@ mod tests {
 
         assert_json_snapshot!(parse_expr("!x".into()).unwrap().1);
         assert_json_snapshot!(parse_expr("!(x && y)".into()).unwrap().1);
+
+        assert_json_snapshot!(parse_expr("await foo".into()).unwrap().1);
+        assert_json_snapshot!(parse_expr("await foo".into()).unwrap().1);
     }
 
     #[test]

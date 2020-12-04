@@ -1,9 +1,0 @@
----
-source: src/parser/statement.rs
-expression: "parse_stmt(\"; \".into()).unwrap().1"
----
-{
-  "type": "EmptyStatement",
-  "start": 0,
-  "end": 1
-}

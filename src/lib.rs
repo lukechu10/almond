@@ -1,2 +1,4 @@
 pub mod ast;
-pub mod parser;
+mod parser;
+
+pub use parser::{parse_program, verbose_trace_dbg};
