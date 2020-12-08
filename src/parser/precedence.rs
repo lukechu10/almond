@@ -280,7 +280,6 @@ pub fn parse_infix_operator(s: Span) -> ParseResult<(InfixOperator, BindingPower
             // Member Access
             // Mozilla docs specify precedence of 20 so binding power of 39 but callee identifier should bind to `new` instead of argument list.
             value((InfixOperator::DotOperator, BindingPower(41, 42)), tag(".")),
-            // TODO
         ))),
     )(s)
 }

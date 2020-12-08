@@ -68,7 +68,8 @@ pub fn parse_identifier(s: Span) -> ParseResult<Node> {
         ),
         |ident: &str| 
             // make sure identifier is not a reserved word
-            not(parse_reserved_word)(ident.into()).is_ok(),
+            // not(reserved_word2)(ident.into()).is_ok(),
+            not(reserved_word)(ident.into()).is_ok()
     )(s)?;
     let (s, end) = position(s)?;
 
