@@ -1,5 +1,7 @@
 //! Parsing for JS keywords
 
+#![allow(dead_code)] // some keyword_* functions are never used but are included for future use cases and for consistency.
+
 use crate::parser::util::*;
 use crate::parser::*;
 use logos::Logos;
