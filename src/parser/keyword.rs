@@ -1,9 +1,134 @@
 //! Parsing for JS keywords
 
+#![allow(dead_code)] // some keyword_* functions are never used but are included for future use cases and for consistency.
+
 use crate::parser::util::*;
 use crate::parser::*;
+use logos::Logos;
+
+/// A finite state automata for checking if next token is a keyword. Not actually used for parsing.
+///
+/// **Important implementation note**: When adding new keywords, make sure it is added both to `KeywordLex` and a `parse_*` function.
+#[derive(Logos)]
+enum KeywordLex {
+    // parse_keyword
+    #[token("break")]
+    Break,
+    #[token("do")]
+    Do,
+    #[token("instanceof")]
+    Instanceof,
+    #[token("typeof")]
+    Typeof,
+    #[token("case")]
+    Case,
+    #[token("else")]
+    Else,
+    #[token("new")]
+    New,
+    #[token("var")]
+    Var,
+    #[token("catch")]
+    Catch,
+    #[token("finally")]
+    Finally,
+    #[token("return")]
+    Return,
+    #[token("void")]
+    Void,
+    #[token("continue")]
+    Continue,
+    #[token("for")]
+    For,
+    #[token("switch")]
+    Switch,
+    #[token("while")]
+    While,
+    #[token("debugger")]
+    Debugger,
+    #[token("function")]
+    Function,
+    #[token("this")]
+    This,
+    #[token("with")]
+    With,
+    #[token("default")]
+    Default,
+    #[token("if")]
+    If,
+    #[token("throw")]
+    Throw,
+    #[token("delete")]
+    Delete,
+    #[token("in")]
+    In,
+    #[token("try")]
+    Try,
+    // parse_future_reserved_word_strict
+    #[token("implements")]
+    Implements,
+    #[token("let")]
+    Let,
+    #[token("private")]
+    Private,
+    #[token("public")]
+    Public,
+    #[token("interface")]
+    Interface,
+    #[token("package")]
+    Package,
+    #[token("protected")]
+    Protected,
+    #[token("static")]
+    Static,
+    #[token("yield")]
+    Yield,
+    // parse_future_reserved_word_lax
+    #[token("class")]
+    Class,
+    #[token("enum")]
+    Enum,
+    #[token("extends")]
+    Extends,
+    #[token("super")]
+    Super,
+    #[token("const")]
+    Const,
+    #[token("export")]
+    Export,
+    #[token("import")]
+    Import,
+    #[token("await")]
+    Await,
+    // parse_reserved_word
+    #[token("null")]
+    Null,
+    #[token("true")]
+    True,
+    #[token("false")]
+    False,
+    #[error]
+    Error,
+}
+
+/// Returns `true` if next token is a reserved word.
+pub fn reserved_word(s: Span) -> ParseResult<()> {
+    let mut lexer = KeywordLex::lexer(&s);
+    let next = lexer.next();
+    match next {
+        None | Some(KeywordLex::Error) => Err(nom::Err::Error(nom::error::Error {
+            code: nom::error::ErrorKind::Tag,
+            input: s,
+        })),
+        Some(_token) => {
+            let (s, _) = take(lexer.span().len())(s)?;
+            not(identifier_continue)(s)
+        }
+    }
+}
 
 /// Succeeds if parsed a reserved word. Should be used with `not` to check if an identifier is not a reserved word.
+#[deprecated = "use reserved_word"]
 pub fn parse_reserved_word(s: Span) -> ParseResult<()> {
     alt((
         parse_keyword,
